@@ -3,10 +3,10 @@ import { MapPin, Phone, Van } from "lucide-react";
 function TopHeader() {
 	return (
 		<>
-			<div className='w-screen bg-[#1a73e8] py-3'>
-				<div className='flex justify-between items-center'>
-					<div className='w-1/2 flex justify-start items-center'>
-						<div className='w-full flex justify-start items-center gap-3 text-white px-50'>
+			<div className='w-full bg-[#1a73e8] py-3'>
+				<div className='max-w-7xl mx-auto flex'>
+					<div className='w-1/2 flex'>
+						<div className='w-full flex gap-3 text-white'>
 							<span>
 								<MapPin />
 							</span>

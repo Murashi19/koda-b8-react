@@ -1,37 +1,50 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Search, Bell, User, ShoppingCart, Heart, TextAlignJustify } from "lucide-react";
+import { useState } from "react";
 
 import LogoHeader from "../../assets/logo-header.png";
 
 function MainHeader() {
+	const [query, setQuery] = useState("");
+	const navigate = useNavigate();
+
+	const handleSearch = (e) => {
+		e.preventDefault();
+		if (query.trim()) {
+			navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+		}
+	};
+
 	return (
 		<>
-			<div className='w-screen flex justify-between py-5 px-50 items-center gap-10'>
-				{/* <!-- LOGO --> */}
-				<div className='w-max flex justify-start items-center cursor-pointer'>
+			<div className='w-screen max-w-7xl mx-auto flex justify-between py-5 items-center gap-10'>
+				{/* LOGO */}
+				<Link
+					className='w-max flex justify-start items-center cursor-pointer'
+					to='/'>
 					<img
 						className='w-45'
 						src={LogoHeader}
 						alt='Logo BeliMudah'
 					/>
-					<Link to='/' />
-				</div>
+				</Link>
 
-				{/* <!-- SEARCH --> */}
+				{/* SEARCH */}
 				<div className='w-3/4 justify-start items-center'>
 					<div className='w-full'>
 						<form
 							id='search-bar'
-							action=''
-							method='get'
-							className='w-full flex flex-row justify-start items-center border border-gray-400 rounded-2xl '>
+							onSubmit={handleSearch}
+							className='w-full flex flex-row justify-start items-center border border-gray-400 rounded-2xl'>
 							<input
-								className='w-full py-3 px-5 rounded-l-2xl outline-hidden '
+								className='w-full py-3 px-5 rounded-l-2xl outline-hidden'
 								type='text'
 								placeholder='Cari produk, merek, kategori...'
+								value={query}
+								onChange={(e) => setQuery(e.target.value)}
 							/>
 							<button
-								className='w-max py-3 px-5 bg-blue-500 text-white rounded-r-2xl'
+								className='w-max py-3 px-5 bg-blue-500 text-white rounded-r-2xl hover:bg-blue-600 transition-colors'
 								type='submit'>
 								<Search />
 							</button>
@@ -39,40 +52,43 @@ function MainHeader() {
 					</div>
 				</div>
 
-				<div className='w-1/4 flex flex-row gap-5'>
-					{/* <!-- Notification --> */}
-					<div className='icon-items notification-icon'>
-						<Bell />
-					</div>
+				<div className='w-1/4 flex flex-row gap-5 items-center'>
+					{/* Notification */}
+					<button
+						onClick={() => navigate("/notifications")}
+						className='relative p-1 hover:text-blue-600 transition-colors cursor-pointer'>
+						<Bell className='w-5 h-5' />
+					</button>
 
-					{/* <!-- User --> */}
-					<div className='flex items-center gap-2'>
-						{/* <!-- icon --> */}
-						<User />
+					{/* User */}
+					<button
+						onClick={() => navigate("/profile/edit-profile")}
+						className='flex items-center gap-2 hover:text-blue-600 transition-colors cursor-pointer'>
+						<User className='w-5 h-5' />
 						<span id='user-name'>Guest</span>
-					</div>
+					</button>
 
-					{/* <!-- Wishlist --> */}
-					<div className='icon-items wishlist-icon'>
-						{/* <!-- icon --> */}
-						<Heart />
-					</div>
+					{/* Wishlist */}
+					<button
+						onClick={() => navigate("/profile/wishlist")}
+						className='relative p-1 hover:text-red-500 transition-colors cursor-pointer'>
+						<Heart className='w-5 h-5' />
+					</button>
 
-					{/* <!-- Cart --> */}
-					<div
+					{/* Cart */}
+					<button
 						id='cart-icon'
-						className='icon-items cart-icon'>
-						{/* <!-- icon --> */}
-						<ShoppingCart />
-					</div>
+						onClick={() => navigate("/cart")}
+						className='relative p-1 hover:text-blue-600 transition-colors cursor-pointer'>
+						<ShoppingCart className='w-5 h-5' />
+					</button>
 
-					{/* <!-- 768px screen --> */}
-					<div
+					{/* Mobile menu — 768px */}
+					<button
 						id='all-icon'
-						className='flex md:hidden'>
-						{/* <!-- icon --> */}
-						<TextAlignJustify />
-					</div>
+						className='flex md:hidden p-1 hover:text-blue-600 transition-colors cursor-pointer'>
+						<TextAlignJustify className='w-5 h-5' />
+					</button>
 				</div>
 			</div>
 		</>

@@ -4,7 +4,7 @@ import { TextAlignJustify, ChevronDown, Monitor, Shirt, House, SportShoe, Book, 
 function NavHeader() {
 	return (
 		<>
-			<nav className='w-full flex justify-start items-center px-50 '>
+			<nav className='w-full max-w-7xl flex justify-start items-center mx-auto py-3'>
 				<div className=' flex justify-between items-center'>
 					<ul className='flex flex-row gap-10 list-none text-gray-600 text-base cursor-pointer '>
 						<li className='flex justify-between items-center text-black font-semibold text-lg gap-2'>
