@@ -1,0 +1,223 @@
+/* eslint-disable react-hooks/incompatible-library */
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+
+// react-icons
+import { FiSearch, FiEye, FiCheck } from "react-icons/fi";
+import { RiFilter3Line } from "react-icons/ri";
+
+// Components
+import Header from "../../components/Admin/Header";
+import Sidebar from "../../components/Admin/Sidebar";
+
+// Order Data
+import { ordersWithMeta } from "../../data/order";
+const ordersData = [...ordersWithMeta];
+
+// Yup Schema
+const searchSchema = yup.object({
+	query: yup
+		.string()
+		.trim()
+		.max(100, "Pencarian maksimal 100 karakter")
+		.matches(/^[a-zA-Z0-9\s\-_.#]*$/, "Karakter tidak valid"),
+});
+
+const tabs = [
+	{ key: "all", label: "Semua" },
+	{ key: "pending", label: "Pending" },
+	{ key: "packed", label: "Dikemas" },
+	{ key: "shipped", label: "Dikirim" },
+	{ key: "delivered", label: "Terkirim" },
+];
+
+const statusConfig = {
+	pending: { label: "Pending", bg: "bg-amber-100", text: "text-amber-600" },
+	packed: { label: "Dikemas", bg: "bg-blue-100", text: "text-blue-600" },
+	shipped: { label: "Dikirim", bg: "bg-indigo-100", text: "text-indigo-600" },
+	delivered: { label: "Terkirim", bg: "bg-green-100", text: "text-green-600" },
+	cancelled: { label: "Dibatalkan", bg: "bg-red-100", text: "text-red-600" },
+};
+
+// Main Page
+export default function OrderList() {
+	const navigate = useNavigate();
+	const [sidebarOpen, setSidebarOpen] = useState(true);
+	const [orders, setOrders] = useState(ordersData);
+	const [activeTab, setActiveTab] = useState("all");
+
+	const {
+		register,
+		watch,
+		formState: { errors },
+	} = useForm({
+		resolver: yupResolver(searchSchema),
+		defaultValues: { query: "" },
+		mode: "onChange",
+	});
+
+	const searchQuery = watch("query") ?? "";
+
+	const tabCounts = tabs.reduce((acc, t) => {
+		acc[t.key] = t.key === "all" ? orders.length : orders.filter((o) => o.status === t.key).length;
+		return acc;
+	}, {});
+
+	// Filter logic
+	const filtered = orders.filter((o) => {
+		const matchSearch = o.orderId.toLowerCase().includes(searchQuery.toLowerCase()) || o.customerName.toLowerCase().includes(searchQuery.toLowerCase());
+		const matchTab = activeTab === "all" || o.status === activeTab;
+		return matchSearch && matchTab;
+	});
+
+	const handleConfirm = (id) => {
+		setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: "delivered" } : o)));
+	};
+
+	return (
+		<div className='flex min-h-screen bg-[#f8fafc] font-sans text-[#1e293b]'>
+			<Sidebar className={`${sidebarOpen ? "w-64" : "w-0 overflow-hidden"} bg-[#07122a] text-white flex flex-col transition-all duration-300 shrink-0`} />
+
+			<div className='flex flex-col flex-1 min-w-0'>
+				{/* Header */}
+				<Header
+					onToggleSidebar={() => setSidebarOpen((v) => !v)}
+					onSearch={(query) => console.log("search:", query)}
+				/>
+
+				{/* Content */}
+				<main className='p-8 flex flex-col gap-6 overflow-auto'>
+					{/* Page Title */}
+					<div className='flex items-center justify-between'>
+						<h1 className='text-3xl font-bold text-gray-900'>Manajemen Pesanan</h1>
+						<button className='flex items-center gap-2 px-5 py-3 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-xl transition-colors cursor-pointer'>Ekspor</button>
+					</div>
+
+					{/* Tabs */}
+					<div className='flex gap-3 flex-wrap'>
+						{tabs.map((t) => (
+							<button
+								key={t.key}
+								onClick={() => setActiveTab(t.key)}
+								className={`h-11 px-4.5 rounded-xl border text-sm cursor-pointer transition-colors ${activeTab === t.key ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"}`}>
+								{t.label} ({tabCounts[t.key]})
+							</button>
+						))}
+					</div>
+
+					{/* Toolbar — Search + Filter with RHF + Yup */}
+					<div className='flex gap-4 p-4 bg-white border border-slate-200 rounded-2xl'>
+						{/* Search */}
+						<div className='flex flex-col flex-1 gap-1'>
+							<div className='relative'>
+								<FiSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[15px]' />
+								<input
+									{...register("query")}
+									type='text'
+									placeholder='Cari nomor pesanan atau nama pelanggan...'
+									className={`w-full h-12 pl-9 pr-4 rounded-xl border text-sm text-gray-900 bg-white outline-none transition-colors ${errors.query ? "border-red-400 focus:border-red-500" : "border-gray-200 focus:border-[#1a73e8]"}`}
+								/>
+							</div>
+							{errors.query && <p className='text-xs text-red-500 ml-1'>{errors.query.message}</p>}
+						</div>
+
+						{/* Filter Button */}
+						<button className='flex items-center gap-2 h-12 px-4 border border-gray-200 rounded-xl bg-white text-sm text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer'>
+							<RiFilter3Line className='text-[16px]' />
+							Filter
+						</button>
+					</div>
+
+					{/* Table */}
+					<div className='bg-white border border-slate-200 rounded-2xl overflow-hidden'>
+						<div className='px-5 py-4 font-semibold text-gray-900 border-b border-slate-200'>{filtered.length} Pesanan</div>
+
+						<div className='overflow-x-auto'>
+							<table className='w-full border-collapse text-sm'>
+								<thead className='bg-[#f8fafc]'>
+									<tr>
+										{["No. Pesanan", "Pelanggan", "Tanggal", "Item", "Total", "Pembayaran", "Status", "Aksi"].map((h) => (
+											<th
+												key={h}
+												className='px-4 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide'>
+												{h}
+											</th>
+										))}
+									</tr>
+								</thead>
+								<tbody>
+									{filtered.length === 0 ? (
+										<tr>
+											<td
+												colSpan={8}
+												className='py-12 text-center text-sm text-gray-400'>
+												Tidak ada pesanan yang cocok.
+											</td>
+										</tr>
+									) : (
+										filtered.map((o) => (
+											<tr
+												key={o.id}
+												className='border-t border-slate-100 hover:bg-gray-50 transition-colors'>
+												{/* Order ID */}
+												<td className='px-4 py-4 text-blue-600 font-semibold'>{o.orderId}</td>
+
+												{/* Customer */}
+												<td className='px-4 py-4'>
+													<div className='flex flex-col gap-1'>
+														<strong className='font-medium text-gray-900'>{o.customerName}</strong>
+														<small className='text-gray-500 text-[13px]'>{o.customerEmail}</small>
+													</div>
+												</td>
+
+												{/* Date */}
+												<td className='px-4 py-4 text-gray-700'>{o.date}</td>
+
+												{/* Items */}
+												<td className='px-4 py-4 text-gray-700'>{o.itemCount}</td>
+
+												{/* Total */}
+												<td className='px-4 py-4 text-blue-600 font-medium'>{o.total}</td>
+
+												{/* Payment */}
+												<td className='px-4 py-4 text-gray-700'>{o.payment}</td>
+
+												{/* Status */}
+												<td className='px-4 py-4'>
+													<span className={`inline-flex items-center justify-center px-3 py-1.5 text-xs font-medium rounded-full ${statusConfig[o.status].bg} ${statusConfig[o.status].text}`}>{statusConfig[o.status].label}</span>
+												</td>
+
+												{/* Actions */}
+												<td className='px-4 py-4'>
+													<div className='flex items-center gap-2'>
+														<button
+															onClick={() => navigate(`/admin/orders/${o.id}`)}
+															className='w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors cursor-pointer'
+															title='Lihat'>
+															<FiEye className='text-[15px] text-gray-500' />
+														</button>
+														{o.status !== "delivered" && o.status !== "cancelled" && (
+															<button
+																onClick={() => handleConfirm(o.id)}
+																className='w-8 h-8 flex items-center justify-center rounded-lg hover:bg-green-50 transition-colors cursor-pointer'
+																title='Konfirmasi'>
+																<FiCheck className='text-[15px] text-green-600' />
+															</button>
+														)}
+													</div>
+												</td>
+											</tr>
+										))
+									)}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</main>
+			</div>
+		</div>
+	);
+}
