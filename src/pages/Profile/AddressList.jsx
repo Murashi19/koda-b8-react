@@ -1,0 +1,120 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { MapPin, Plus, Pencil, Trash2 } from "lucide-react";
+
+// Components
+import Header from "../../components/Header";
+import ButtonMessage from "../../components/ButtonMessage";
+import Footer from "../../components/Footer";
+
+// Address Data
+import { initialAddresses } from "../../data/addressList";
+import ProfileSidebar from "../../components/ProfileSidebar";
+
+// Main Page
+export default function AddressList() {
+	const navigate = useNavigate();
+	const [addresses, setAddresses] = useState(initialAddresses);
+
+	const handleSetMain = (id) => {
+		setAddresses((prev) => prev.map((a) => ({ ...a, isMain: a.id === id })));
+	};
+
+	const handleDelete = (id) => {
+		setAddresses((prev) => prev.filter((a) => a.id !== id));
+	};
+
+	return (
+		<>
+			<Header />
+			<ButtonMessage />
+			<main className='min-h-screen max-w-[1728px] mx-auto'>
+				<div className='max-w-6xl mx-auto grid grid-cols-4 gap-8 px-4 py-8'>
+					{/* ── Left: Sidebar ── */}
+					<ProfileSidebar activeNav='address' />
+
+					{/* ── Right: Address List ── */}
+					<div className='col-span-3 flex flex-col gap-4 bg-white border border-black/10 rounded-2xl p-5'>
+						{/* Header */}
+						<div className='flex items-center justify-between'>
+							<h2 className='text-xl font-medium text-gray-900'>Alamat Saya</h2>
+							<button
+								type='button'
+								className='flex items-center gap-2 h-10 px-4 bg-[#1a73e8] hover:bg-blue-600 text-white text-sm font-medium rounded-xl transition-colors'>
+								<Plus
+									className='w-4 h-4'
+									strokeWidth={2}
+								/>
+								Tambah Alamat
+							</button>
+						</div>
+
+						{/* Address Cards */}
+						{addresses.length === 0 ? (
+							<div className='flex flex-col items-center justify-center py-16 gap-3 text-gray-400'>
+								<MapPin
+									className='w-12 h-12'
+									strokeWidth={1}
+								/>
+								<p className='text-sm'>Belum ada alamat tersimpan.</p>
+							</div>
+						) : (
+							<div className='flex flex-col gap-4'>
+								{addresses.map((addr) => (
+									<div
+										key={addr.id}
+										className={`flex flex-col gap-3 rounded-2xl border p-5 transition-colors ${addr.isMain ? "border-[#1a73e8] bg-blue-50/40" : "border-black/10 bg-white"}`}>
+										{/* Label row */}
+										<div className='flex items-center justify-between'>
+											<div className='flex items-center gap-3'>
+												<h3 className='text-base font-medium text-gray-900'>{addr.label}</h3>
+												{addr.isMain && <span className='flex items-center justify-center h-6 px-3 rounded-full text-xs font-normal text-white bg-[#1a73e8]'>Utama</span>}
+											</div>
+											{/* Action buttons */}
+											<div className='flex items-center gap-2'>
+												{!addr.isMain && (
+													<button
+														onClick={() => handleSetMain(addr.id)}
+														className='text-xs text-[#1a73e8] border border-[#1a73e8] rounded-lg px-3 py-1.5 hover:bg-blue-50 transition-colors'>
+														Jadikan Utama
+													</button>
+												)}
+												<button
+													onClick={() => navigate(`/profile/address/edit/${addr.id}`)}
+													className='w-8 h-8 flex items-center justify-center rounded-lg border border-black/10 hover:bg-gray-100 transition-colors'>
+													<Pencil
+														className='w-3.5 h-3.5 text-gray-500'
+														strokeWidth={2}
+													/>
+												</button>
+												{!addr.isMain && (
+													<button
+														onClick={() => handleDelete(addr.id)}
+														className='w-8 h-8 flex items-center justify-center rounded-lg border border-black/10 hover:bg-red-50 transition-colors'>
+														<Trash2
+															className='w-3.5 h-3.5 text-red-500'
+															strokeWidth={2}
+														/>
+													</button>
+												)}
+											</div>
+										</div>
+
+										{/* Address detail */}
+										<div className='flex flex-col gap-1'>
+											<p className='text-sm font-medium text-gray-900'>
+												{addr.name} · {addr.phone}
+											</p>
+											<p className='text-sm text-gray-500'>{addr.address}</p>
+										</div>
+									</div>
+								))}
+							</div>
+						)}
+					</div>
+				</div>
+			</main>
+			<Footer />
+		</>
+	);
+}
