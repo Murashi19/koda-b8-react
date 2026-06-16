@@ -1,9 +1,58 @@
-import { CircleCheckBig, User, Lock, Mail, Eye, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { registerSchema } from "../../services/validations/registerSchema";
+
+import { CircleCheckBig, User, Lock, Mail, ArrowRight } from "lucide-react";
+import { PiEyeBold, PiEyeClosed } from "react-icons/pi";
 import { Link } from "react-router-dom";
 import BgImage from "../../assets/img-regis.jpg";
 import Logo from "../../assets/logo.svg";
 
 function Register() {
+	const navigate = useNavigate();
+	const [showPassword, setShowPassword] = useState(false);
+	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+		reset,
+	} = useForm({
+		resolver: yupResolver(registerSchema),
+	});
+	const onSubmit = (data) => {
+		const users = JSON.parse(localStorage.getItem("users")) || [];
+		const emailExists = users.some((user) => user.email === data.email);
+
+		if (emailExists) {
+			alert("Email sudah terdaftar");
+			return;
+		}
+
+		const newUser = {
+			id: users.length + 1,
+			name: data.name,
+			email: data.email,
+			password: data.password,
+			role: "customer",
+			createdAt: new Date().toISOString(),
+		};
+
+		users.push(newUser);
+		localStorage.setItem("users", JSON.stringify(users));
+		reset();
+		alert("Registrasi berhasil");
+		navigate("/auth/login");
+	};
+
+	const togglePasswordVisibility = () => {
+		setShowPassword(!showPassword);
+	};
+	const toggleConfirmPasswordVisibility = () => {
+		setShowConfirmPassword(!showConfirmPassword);
+	};
 	return (
 		<>
 			<div className='h-screen flex justify-between'>
@@ -79,6 +128,7 @@ function Register() {
 						<form
 							id='register-form'
 							action=''
+							onSubmit={handleSubmit(onSubmit)}
 							className='w-full flex flex-col justify-center items-start '>
 							<div className='w-full flex flex-col justify-center items-start gap-2 mb-3'>
 								<label
@@ -94,8 +144,10 @@ function Register() {
 										name='name'
 										id='name'
 										placeholder='Nama lengkap kamu'
+										{...register("name")}
 									/>
 								</div>
+								{errors.name && <p className='text-red-500 text-sm'>{errors.name.message}</p>}
 							</div>
 
 							<div className='w-full flex flex-col justify-center items-start gap-2 mb-3'>
@@ -112,8 +164,10 @@ function Register() {
 										name='email'
 										id='email'
 										placeholder='email.@contoh.com'
+										{...register("email")}
 									/>
 								</div>
+								{errors.email && <p className='text-red-500 text-sm'>{errors.email.message}</p>}
 							</div>
 
 							<div className='w-full flex flex-col justify-center items-start gap-2 mb-3'>
@@ -128,20 +182,24 @@ function Register() {
 									<Lock className='w-5 h-5 text-gray-600' />
 									<input
 										className='w-full outline-none border-none'
-										type='password'
+										type={showPassword ? "text" : "password"}
 										name='password'
 										id='password'
 										placeholder='Minimal 6 karakter'
+										{...register("password")}
 									/>
-									<button>
-										<Eye className='w-5 h-5 text-gray-600' />
+									<button
+										type='button'
+										onClick={togglePasswordVisibility}>
+										{showPassword ? <PiEyeBold className='w-5 h-5 text-gray-600 cursor-pointer' /> : <PiEyeClosed className='w-5 h-5 text-gray-600 cursor-pointer' />}
 									</button>
 								</div>
+								{errors.password && <p className='text-red-500 text-sm'>{errors.password.message}</p>}
 							</div>
 							<div className='w-full flex flex-col justify-center items-start gap-2 mb-3'>
 								<div className='flex justify-between'>
 									<label
-										htmlFor='password'
+										htmlFor='confirmPassword'
 										className='text-sm text-black-600'>
 										Konfirmasi Kata Sandi
 									</label>
@@ -150,15 +208,19 @@ function Register() {
 									<Lock className='w-5 h-5 text-gray-600' />
 									<input
 										className='w-full outline-none border-none'
-										type='password'
-										name='password'
-										id='password'
+										type={showConfirmPassword ? "text" : "password"}
+										name='confirmPassword'
+										id='confirmPassword'
 										placeholder='Ulangi kata sandi'
+										{...register("confirmPassword")}
 									/>
-									<button>
-										<Eye className='w-5 h-5 text-gray-600' />
+									<button
+										type='button'
+										onClick={toggleConfirmPasswordVisibility}>
+										{showConfirmPassword ? <PiEyeBold className='w-5 h-5 text-gray-600 cursor-pointer' /> : <PiEyeClosed className='w-5 h-5 text-gray-600 cursor-pointer' />}
 									</button>
 								</div>
+								{errors.confirmPassword && <p className='text-red-500 text-sm'>{errors.confirmPassword.message}</p>}
 							</div>
 							<div className='flex gap-2 items-start justify-center text-md font-md text-gray-600 ml-1 text-justify mb-10'>
 								<input
