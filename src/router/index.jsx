@@ -22,6 +22,10 @@ import MyOrder from "../pages/Profile/MyOrder";
 import Wishlist from "../pages/Profile/Wishlist";
 import AddressList from "../pages/Profile/AddressList";
 import EditProfile from "../pages/Profile/EditProfile";
+import AdminDashboard from "../pages/Admin/dashboard";
+import ProductList from "../pages/Admin/ProductList";
+import OrderList from "../pages/Admin/OrderList";
+import CustomerList from "../pages/Admin/Customers";
 
 export const router = createBrowserRouter([
 	{
@@ -83,5 +87,21 @@ export const router = createBrowserRouter([
 	{
 		path: "/profile/edit-profile",
 		element: <EditProfile />,
+	},
+	{
+		path: "/admin/dashboard",
+		element: <AdminDashboard />,
+	},
+	{
+		path: "/admin/produk-list",
+		element: <ProductList />,
+	},
+	{
+		path: "/admin/order-list",
+		element: <OrderList />,
+	},
+	{
+		path: "/admin/customers",
+		element: <CustomerList />,
 	},
 ]);
