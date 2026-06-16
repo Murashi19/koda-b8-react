@@ -1,9 +1,50 @@
-import { Lock, Mail, Eye, SquareArrowRightEnter } from "lucide-react";
+import { useState } from "react";
+
+// react-dom
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import BgImage from "../../assets/img-forgot.jpg";
+
+// Hooks
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { loginSchema } from "../../services/validations/loginSchema";
+
+// react-icons
+import { Lock, Mail, SquareArrowRightEnter } from "lucide-react";
+import { PiEyeBold, PiEyeClosed } from "react-icons/pi";
+
+// Images
+import BgImage from "../../assets/img-login.jpg";
 import Logo from "../../assets/logo.svg";
 
 function Login() {
+	const [showPassword, setShowPassword] = useState(false);
+	const navigate = useNavigate();
+	const {
+		register,
+		handleSubmit,
+		formState: { errors },
+	} = useForm({
+		resolver: yupResolver(loginSchema),
+	});
+	const onSubmit = (data) => {
+		const users = JSON.parse(localStorage.getItem("users")) || [];
+		const user = users.find((user) => user.email === data.email && user.password === data.password && user.role === "customer");
+		const admin = users.find((user) => user.email === data.email && user.password === data.password && user.role === "admin");
+		if (user) {
+			localStorage.setItem("user", JSON.stringify(user));
+			navigate("/");
+		}
+		if (!user) {
+			alert("Email atau password salah");
+		}
+		if (admin) {
+			localStorage.setItem("user", JSON.stringify(admin));
+			navigate("/admin/dashboard");
+		}
+	};
+
+	const toggleShowPassword = () => setShowPassword((prev) => !prev);
 	return (
 		<>
 			<div className='h-screen flex justify-between'>
@@ -77,6 +118,7 @@ function Login() {
 						<form
 							id='form-login'
 							action=''
+							onSubmit={handleSubmit(onSubmit)}
 							className='w-full flex flex-col justify-center items-start mb-2'>
 							<div className='w-full flex flex-col justify-center items-start gap-2 mb-3'>
 								<label
@@ -92,8 +134,10 @@ function Login() {
 										name='email'
 										id='email'
 										placeholder='email.@contoh.com'
+										{...register("email", { required: true })}
 									/>
 								</div>
+								{errors.email && <p className='text-red-600'>{errors.email.message}</p>}
 							</div>
 
 							<div className='w-full flex flex-col justify-center items-start gap-2 mb-3'>
@@ -111,15 +155,19 @@ function Login() {
 									<Lock className='w-5 h-5 text-gray-600' />
 									<input
 										className='w-full outline-none border-none'
-										type='password'
+										type={showPassword ? "text" : "password"}
 										name='password'
 										id='password'
 										placeholder='Masukan Kata Sandi'
+										{...register("password", { required: true })}
 									/>
-									<button>
-										<Eye className='w-5 h-5 text-gray-600' />
+									<button
+										type='button'
+										onClick={toggleShowPassword}>
+										{showPassword ? <PiEyeBold className='w-5 h-5 text-gray-600' /> : <PiEyeClosed className='w-5 h-5 text-gray-600' />}
 									</button>
 								</div>
+								{errors.password && <p className='text-red-600'>{errors.password.message}</p>}
 							</div>
 							<div className='flex gap-2 items-start justify-center text-md font-md text-gray-600 ml-1 text-justify mb-8'>
 								<input
