@@ -3,7 +3,9 @@ import StarRating from "./StarsRate";
 
 export default function ProductCard({ product, wishlisted, onToggle }) {
 	return (
-		<div className='flex flex-col bg-white border border-black/10 rounded-xl overflow-hidden'>
+		<div
+			key={product.id}
+			className='flex flex-col bg-white border border-black/10 rounded-xl overflow-hidden'>
 			<div className='relative aspect-square'>
 				<img
 					src={product.image}
