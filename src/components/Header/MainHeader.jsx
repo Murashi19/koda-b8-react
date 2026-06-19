@@ -1,12 +1,26 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Bell, User, ShoppingCart, Heart, TextAlignJustify } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+import useLocalStorage from "../../hooks/useLocalStorage";
+
+import AuthContext from "../../context/AuthContext";
+import { useContext } from "react";
 
 import LogoHeader from "../../assets/logo-header.png";
 
 function MainHeader() {
 	const [query, setQuery] = useState("");
 	const navigate = useNavigate();
+
+	const { auth } = useContext(AuthContext);
+	const [users] = useLocalStorage("users");
+
+	useEffect(() => {
+		if (users.length === 0) {
+			navigate("/auth/login");
+		}
+	}, [auth, navigate, users]);
 
 	const handleSearch = (e) => {
 		e.preventDefault();
@@ -65,7 +79,7 @@ function MainHeader() {
 						onClick={() => navigate("/profile/edit-profile")}
 						className='flex items-center gap-2 hover:text-blue-600 transition-colors cursor-pointer'>
 						<User className='w-5 h-5' />
-						<span id='user-name'>Guest</span>
+						<span id='user-name'>{auth?.name}</span>
 					</button>
 
 					{/* Wishlist */}
