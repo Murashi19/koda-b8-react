@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { registerSchema } from "../../services/validations/registerSchema";
@@ -23,6 +24,7 @@ function Register() {
 		reset,
 	} = useForm({
 		resolver: yupResolver(registerSchema),
+		mode: "all",
 	});
 
 	function processRegister(e) {

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Trash2, Heart, Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 // Data
 import { products } from "../data/products.js";
 
@@ -14,6 +16,7 @@ import Item1 from "../assets/product1.png";
 
 // Main Page
 export default function CartPage() {
+	const navigate = useNavigate();
 	const [quantity, setQuantity] = useState(1);
 	const [voucher, setVoucher] = useState("");
 	const [savedToWishlist, setSavedToWishlist] = useState(false);
@@ -160,6 +163,9 @@ export default function CartPage() {
 						{/* Checkout Button */}
 						<button
 							type='button'
+							onClick={() => {
+								navigate("/checkout/step1");
+							}}
 							className='w-full h-13 rounded-xl bg-orange-500 hover:bg-orange-400 text-white text-base font-medium flex items-center justify-center gap-2 transition-colors'>
 							<Shield
 								className='w-3.25 h-4'

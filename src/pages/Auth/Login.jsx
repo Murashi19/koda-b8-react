@@ -32,6 +32,7 @@ function Login() {
 		formState: { errors },
 	} = useForm({
 		resolver: yupResolver(loginSchema),
+		mode: "all",
 	});
 	function processLogin(e) {
 		const data = e;
@@ -189,10 +190,10 @@ function Login() {
 								/>
 								<label htmlFor=''>Ingat saya selama 30 hari</label>
 							</div>
-							<div className='w-full flex flex-row justify-center items-center bg-blue-600 rounded-lg p-3 hover:bg-blue-700 gap-3'>
+							<div className='w-full flex flex-row justify-center items-center bg-blue-600 rounded-lg p-3 hover:bg-blue-700 gap-3 cursor-pointer'>
 								<SquareArrowRightEnter className='w-5 h-5 text-white' />
 								<button
-									className='text-md text-white justify-center items-center font-md border-none'
+									className='text-md text-white justify-center items-center font-md border-none cursor-pointer'
 									type='submit'>
 									Masuk
 								</button>
