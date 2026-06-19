@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { registerSchema } from "../../services/validations/registerSchema";
+import useLocalStorage from "../../hooks/useLocalStorage";
 
 import { CircleCheckBig, User, Lock, Mail, ArrowRight } from "lucide-react";
 import { PiEyeBold, PiEyeClosed } from "react-icons/pi";
@@ -12,6 +13,7 @@ import Logo from "../../assets/logo.svg";
 
 function Register() {
 	const navigate = useNavigate();
+	const [users, setUsers] = useLocalStorage("users");
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const {
@@ -22,30 +24,31 @@ function Register() {
 	} = useForm({
 		resolver: yupResolver(registerSchema),
 	});
-	const onSubmit = (data) => {
-		const users = JSON.parse(localStorage.getItem("users")) || [];
-		const emailExists = users.some((user) => user.email === data.email);
 
-		if (emailExists) {
+	function processRegister(e) {
+		const data = e;
+		const { name, email, password } = data;
+		console.log(data);
+
+		const existingUser = users.some((user) => user.email === email);
+
+		if (existingUser) {
 			alert("Email sudah terdaftar");
 			return;
 		}
 
 		const newUser = {
 			id: users.length + 1,
-			name: data.name,
-			email: data.email,
-			password: data.password,
+			name: name,
+			email: email,
+			password: password,
 			role: "customer",
-			createdAt: new Date().toISOString(),
 		};
+		setUsers(newUser);
 
-		users.push(newUser);
-		localStorage.setItem("users", JSON.stringify(users));
 		reset();
-		alert("Registrasi berhasil");
 		navigate("/auth/login");
-	};
+	}
 
 	const togglePasswordVisibility = () => {
 		setShowPassword(!showPassword);
@@ -57,7 +60,7 @@ function Register() {
 		<>
 			<div className='h-screen flex justify-between'>
 				<div
-					className='w-1/2 h-full p-30 bg-cover bg-center flex flex-col'
+					className='w-1/2 h-full p-30 bg-cover bg-center hidden lg:flex flex-col'
 					style={{ backgroundImage: `linear-gradient(rgba(20,73,230,0.8),rgba(49,44,133,0.8)), url(${BgImage})` }}>
 					<div className='w-140 cursor-pointer'>
 						<div className='flex items-center gap-2 text-white text-sm font-semibold'>
@@ -94,11 +97,11 @@ function Register() {
 					</div>
 					<div className='text-sm text-gray-300 flex justify-start mt-auto'>© 2026 BeliMudah. Seluruh hak cipta dilindungi.</div>
 				</div>
-				<div className='w-1/2 h-full p-30 flex flex-col justify-center items-center'>
-					<div className='w-2/3 flex flex-col gap-4 justify-center items-center mb-10'>
+				<div className='w-full mx-auto lg:w-1/2 h-full flex flex-col justify-center items-center'>
+					<div className='w-2/3 flex flex-col gap-0 lg:gap-2 justify-center items-center mb-1 lg:mb-5'>
 						<div className='w-full flex flex-col justify-center items-start mt-4 mb-2'>
-							<div className='text-4xl font-bold text-black-100 mb-1'>Buat Akun Baru</div>
-							<span className='text-lg text-gray-700 mb-4'>
+							<div className='text-2xl lg:text-4xl font-bold text-black-100 mb-1'>Buat Akun Baru</div>
+							<span className='text-md lg:text-lg text-gray-700 mb-4'>
 								Sudah punya akun?
 								<Link
 									className='ml-2 no-underscore text-blue-600'
@@ -128,7 +131,7 @@ function Register() {
 						<form
 							id='register-form'
 							action=''
-							onSubmit={handleSubmit(onSubmit)}
+							onSubmit={handleSubmit(processRegister)}
 							className='w-full flex flex-col justify-center items-start '>
 							<div className='w-full flex flex-col justify-center items-start gap-2 mb-3'>
 								<label
@@ -222,14 +225,18 @@ function Register() {
 								</div>
 								{errors.confirmPassword && <p className='text-red-500 text-sm'>{errors.confirmPassword.message}</p>}
 							</div>
-							<div className='flex gap-2 items-start justify-center text-md font-md text-gray-600 ml-1 text-justify mb-10'>
+							<div className='flex gap-2 text-sm lg:text-md font-md text-gray-600 ml-1 text-justify mb-2 lg:mb-10'>
 								<input
-									className='cursor-pointer mt-2'
+									className='flex items-center justify-center cursor-pointer'
 									type='checkbox'
 									name=''
 									id=''
 								/>
-								<label htmlFor=''>Saya Menyetujui Syarat & Ketentuan dan Kebijakan Privasi BeliMudah</label>
+								<label
+									className='flex items-center justify-center text-center'
+									htmlFor=''>
+									Saya Menyetujui Syarat & Ketentuan dan Kebijakan Privasi BeliMudah
+								</label>
 							</div>
 							<div className='w-full flex flex-row justify-center items-center bg-orange-600 rounded-lg p-3 hover:bg-orange-700 mb-5 gap-3'>
 								<button

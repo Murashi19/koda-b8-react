@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 
 // react-dom
 import { useNavigate } from "react-router-dom";
@@ -8,6 +8,10 @@ import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { loginSchema } from "../../services/validations/loginSchema";
+import useLocalStorage from "../../hooks/useLocalStorage";
+
+// Context
+import AuthContext from "../../context/AuthContext";
 
 // react-icons
 import { Lock, Mail, SquareArrowRightEnter } from "lucide-react";
@@ -19,6 +23,8 @@ import Logo from "../../assets/logo.svg";
 
 function Login() {
 	const [showPassword, setShowPassword] = useState(false);
+	const [users] = useLocalStorage("users");
+	const { setAuth } = useContext(AuthContext);
 	const navigate = useNavigate();
 	const {
 		register,
@@ -27,22 +33,27 @@ function Login() {
 	} = useForm({
 		resolver: yupResolver(loginSchema),
 	});
-	const onSubmit = (data) => {
-		const users = JSON.parse(localStorage.getItem("users")) || [];
-		const user = users.find((user) => user.email === data.email && user.password === data.password && user.role === "customer");
-		const admin = users.find((user) => user.email === data.email && user.password === data.password && user.role === "admin");
-		if (user) {
-			localStorage.setItem("user", JSON.stringify(user));
-			navigate("/");
-		}
-		if (!user) {
+	function processLogin(e) {
+		const data = e;
+		console.log(data);
+		console.log(users);
+
+		const existing = users.find((user) => user.email === data.email);
+
+		if (!existing) {
 			alert("Email atau password salah");
+			return;
 		}
-		if (admin) {
-			localStorage.setItem("user", JSON.stringify(admin));
+
+		setAuth(existing);
+
+		if (existing.role === "admin") {
 			navigate("/admin/dashboard");
+			return;
 		}
-	};
+
+		navigate("/");
+	}
 
 	const toggleShowPassword = () => setShowPassword((prev) => !prev);
 	return (
@@ -118,7 +129,7 @@ function Login() {
 						<form
 							id='form-login'
 							action=''
-							onSubmit={handleSubmit(onSubmit)}
+							onSubmit={handleSubmit(processLogin)}
 							className='w-full flex flex-col justify-center items-start mb-2'>
 							<div className='w-full flex flex-col justify-center items-start gap-2 mb-3'>
 								<label
