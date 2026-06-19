@@ -26,6 +26,7 @@ import AdminDashboard from "../pages/Admin/dashboard";
 import ProductList from "../pages/Admin/ProductList";
 import OrderList from "../pages/Admin/OrderList";
 import CustomerList from "../pages/Admin/Customers";
+import CheckOutLayout from "../pages/CheckOutLayout";
 
 export const router = createBrowserRouter([
 	{
@@ -57,19 +58,25 @@ export const router = createBrowserRouter([
 		element: <Cart />,
 	},
 	{
-		path: "/checkout/step1",
-		element: <CheckoutStep1 />,
+		path: "/checkout",
+		element: <CheckOutLayout />,
+		children: [
+			{
+				path: "/checkout/step1",
+				element: <CheckoutStep1 />,
+			},
+			{
+				path: "/checkout/step2",
+				element: <CheckoutStep2 />,
+			},
+			{
+				path: "/checkout/step3",
+				element: <CheckoutStep3 />,
+			},
+		],
 	},
 	{
-		path: "/checkout/step2",
-		element: <CheckoutStep2 />,
-	},
-	{
-		path: "/checkout/step3",
-		element: <CheckoutStep3 />,
-	},
-	{
-		path: "/checkout/success",
+		path: "/success",
 		element: <CheckoutSuccess />,
 	},
 	{

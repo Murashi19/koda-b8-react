@@ -1,6 +1,5 @@
 import { CircleCheckBig, Truck, MapPin, Package, ArrowRight } from "lucide-react";
-import Header from "../../components/Header";
-import ButtonMessage from "../../components/ButtonMessage";
+import { useNavigate } from "react-router-dom";
 
 const orderStatuses = [
 	{
@@ -58,10 +57,9 @@ const orderStatuses = [
 ];
 
 export default function CheckoutSuccess() {
+	const navigate = useNavigate();
 	return (
 		<>
-			<Header />
-			<ButtonMessage />
 			<main className='min-h-screen max-w-[1728px] mx-auto'>
 				<div className='flex flex-col items-center justify-start gap-8 px-4 py-12'>
 					{/* Success Icon */}
@@ -148,7 +146,8 @@ export default function CheckoutSuccess() {
 					<div className='w-160 flex items-center gap-3'>
 						<button
 							type='button'
-							className='h-12.5 rounded-xl px-6 bg-[#1a73e8] hover:bg-blue-600 text-white text-base font-medium flex items-center justify-center gap-2 transition-colors'>
+							onClick={() => navigate("/profile/my-orders")}
+							className='h-12.5 rounded-xl px-6 bg-[#1a73e8] hover:bg-blue-600 text-white text-base font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer'>
 							<Package
 								className='w-4 h-4'
 								strokeWidth={2}
@@ -157,12 +156,14 @@ export default function CheckoutSuccess() {
 						</button>
 						<button
 							type='button'
-							className='h-12.5 rounded-xl px-6 border border-[#1a73e8] text-gray-500 text-base font-medium flex items-center justify-center hover:bg-blue-50 transition-colors'>
+							onClick={() => navigate("/profile/my-orders")}
+							className='h-12.5 rounded-xl px-6 border border-[#1a73e8] text-gray-500 text-base font-medium flex items-center justify-center hover:bg-blue-50 transition-colors cursor-pointer'>
 							Lihat Riwayat Pesanan
 						</button>
 						<button
 							type='button'
-							className='h-12.5 rounded-xl px-6 text-[#1a73e8] text-base font-medium flex items-center justify-center gap-2 hover:bg-blue-50 transition-colors'>
+							onClick={() => navigate("/")}
+							className='h-12.5 rounded-xl px-6 text-[#1a73e8] text-base font-medium flex items-center justify-center gap-2 hover:bg-blue-50 transition-colors cursor-pointer'>
 							<span>Lanjut Belanja</span>
 							<ArrowRight
 								className='w-4.5 h-4.5'
