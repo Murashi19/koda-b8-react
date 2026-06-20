@@ -1,7 +1,14 @@
-import { Heart } from "lucide-react";
+import { Heart, ShoppingCart } from "lucide-react";
 import StarRating from "./StarsRate";
+import useCart from "../hooks/useCart";
+import useWishlist from "../hooks/useWishlist";
 
-export default function ProductCard({ product, wishlisted, onToggle }) {
+export default function ProductCard({ product }) {
+	const { addToCart } = useCart();
+	const { toggleWishlist, isWishlisted } = useWishlist();
+
+	const wishlisted = isWishlisted(product.id);
+
 	return (
 		<div className='flex flex-col bg-white border border-black/10 rounded-xl overflow-hidden'>
 			<div className='relative aspect-square'>
@@ -13,7 +20,7 @@ export default function ProductCard({ product, wishlisted, onToggle }) {
 				<span className={`absolute top-2 left-2 h-6 min-w-11.25 px-2.5 flex items-center justify-center rounded-full text-xs text-white ${product.badgeType === "new" ? "bg-[#1a73e8]" : "bg-red-600"}`}>{product.badge}</span>
 				<button
 					type='button'
-					onClick={() => onToggle(product.id)}
+					onClick={() => toggleWishlist(product)}
 					className='absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 flex items-center justify-center hover:bg-white transition-colors'>
 					<Heart
 						className='w-4 h-4'
@@ -35,6 +42,16 @@ export default function ProductCard({ product, wishlisted, onToggle }) {
 					<span className='text-base font-semibold text-[#1a73e8]'>{product.discountPrice}</span>
 					{product.regularPrice && <span className='text-xs text-gray-500 line-through'>{product.regularPrice}</span>}
 				</div>
+				<button
+					type='button'
+					onClick={() => addToCart(product)}
+					className='mt-1 flex items-center justify-center gap-2 w-full h-9 rounded-lg bg-[#1a73e8] text-white text-sm font-medium hover:bg-[#1558b0] transition-colors'>
+					<ShoppingCart
+						className='w-4 h-4'
+						strokeWidth={1.5}
+					/>
+					Add to Cart
+				</button>
 			</div>
 		</div>
 	);

@@ -25,9 +25,7 @@ function useCountdown(initialSeconds) {
 
 export default function FlashDeal() {
 	const { h, m, s } = useCountdown(Timer);
-	const [wishlisted, setWishlisted] = useState({});
 
-	const toggleWishlist = (id) => setWishlisted((prev) => ({ ...prev, [id]: !prev[id] }));
 	// Tampilkan hanya 4 produk pertama
 	const flashProducts = products.filter((p) => p.tags.includes("flash")).slice(0, 4);
 	return (
@@ -71,8 +69,6 @@ export default function FlashDeal() {
 					<ProductCard
 						key={product.id}
 						product={product}
-						wishlisted={wishlisted[product.id]}
-						onToggle={toggleWishlist}
 					/>
 				))}
 			</div>

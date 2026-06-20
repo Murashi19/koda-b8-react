@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { TrendingUp, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import products from "../../data/products.js";
@@ -6,9 +5,6 @@ import products from "../../data/products.js";
 import ProductCard from "../ProductCard.jsx";
 
 export default function NewProduct() {
-	const [wishlisted, setWishlisted] = useState({});
-	const toggle = (id) => setWishlisted((prev) => ({ ...prev, [id]: !prev[id] }));
-
 	const newProducts = products.filter((p) => p.tags.includes("new")).slice(0, 4);
 
 	return (
@@ -36,8 +32,6 @@ export default function NewProduct() {
 					<ProductCard
 						key={product.id}
 						product={product}
-						wishlisted={wishlisted[product.id]}
-						onToggle={toggle}
 					/>
 				))}
 			</div>
