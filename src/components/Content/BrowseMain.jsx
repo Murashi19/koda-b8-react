@@ -1,49 +1,41 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
 import ProductCard from "../ProductCard";
+import BrowseFilter from "../BrowseFilter";
+
+import useProductFilter from "../../hooks/useProductFilter";
+import usePagination from "../../hooks/usePagination";
 
 import products from "../../data/products";
 import category from "../../data/category";
-
-const ratingOptions = [5, 4, 3];
-
-function parsePrice(price) {
-	if (!price) return 0;
-
-	return Number(price.replace("Rp", "").replace(/\./g, "").replace(/\s/g, ""));
-}
-
-function StarRating({ rating, max = 5, size = "sm" }) {
-	const px = size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5";
-
-	return (
-		<div className='flex items-center gap-0.5'>
-			{Array.from({ length: max }, (_, i) => (
-				<svg
-					key={i}
-					viewBox='0 0 24 24'
-					className={px}
-					fill={i < Math.floor(rating) ? "gold" : "#d1d5db"}>
-					<path d='M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z' />
-				</svg>
-			))}
-		</div>
-	);
-}
 
 export default function BrowseMain() {
 	const { slug } = useParams();
 
 	const [wishlisted, setWishlisted] = useState({});
-	const [selectedBrands, setSelectedBrands] = useState([]);
-	const [selectedRating, setSelectedRating] = useState(null);
-	const [inStock, setInStock] = useState(false);
-	const [priceMax, setPriceMax] = useState(20000000);
-	const [visibleProducts, setVisibleProducts] = useState(8);
 
-	const brands = [...new Set(products.map((p) => p.brand))];
+	const brands = useMemo(() => [...new Set(products.map((p) => p.brand))], []);
+
+	const categoriesWithCount = useMemo(
+		() =>
+			category.map((cat) => ({
+				...cat,
+				totalProduct: products.filter((product) => product.category === cat.name).length,
+			})),
+		[],
+	);
+
+	const selectedCategory = categoriesWithCount.find((cat) => cat.slug === slug);
+
+	const { filteredProducts, selectedBrands, setSelectedBrands, selectedRating, setSelectedRating, inStock, setInStock, priceMax, setPriceMax } = useProductFilter(products, selectedCategory?.name);
+
+	const { currentPage, setCurrentPage, totalPages, displayedData } = usePagination(filteredProducts, 16);
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [slug, selectedBrands, selectedRating, inStock, priceMax, setCurrentPage]);
 
 	const toggleWishlist = (id) => {
 		setWishlisted((prev) => ({
@@ -56,32 +48,13 @@ export default function BrowseMain() {
 		setSelectedBrands((prev) => (prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]));
 	};
 
-	const categoriesWithCount = category.map((cat) => ({
-		...cat,
-		totalProduct: products.filter((product) => product.category === cat.name).length,
-	}));
-
-	const selectedCategory = categoriesWithCount.find((cat) => cat.slug === slug);
-
-	if (!selectedCategory) {
+	if (slug && !selectedCategory) {
 		return (
 			<div className='max-w-7xl mx-auto py-20 text-center'>
 				<h1 className='text-2xl font-semibold'>Kategori tidak ditemukan</h1>
 			</div>
 		);
 	}
-
-	const filteredProducts = products
-		.filter((product) => product.category === selectedCategory.name)
-		.filter((product) => parsePrice(product.discountPrice) <= priceMax)
-		.filter((product) => selectedBrands.length === 0 || selectedBrands.includes(product.brand))
-		.slice(0, 4)
-		.filter((product) => selectedRating === null || product.rating >= selectedRating)
-		.filter((product) => !inStock || product.stock > 0);
-
-	const displayedProducts = filteredProducts.slice(0, visibleProducts);
-
-	const remainingProducts = filteredProducts.length - visibleProducts;
 
 	return (
 		<main className='max-w-7xl mx-auto px-4 mb-12'>
@@ -94,100 +67,29 @@ export default function BrowseMain() {
 
 				<ChevronRight className='w-4 h-4' />
 
-				<span>{selectedCategory.name}</span>
+				<span>{slug ? selectedCategory?.name : "Semua Produk"}</span>
 			</nav>
 
-			<h1 className='text-2xl font-medium mb-6'>{selectedCategory.name}</h1>
+			<h1 className='text-2xl font-medium mb-6'>{slug ? selectedCategory?.name : "Semua Produk"}</h1>
 
-			{/* Harga */}
 			<div className='flex gap-6'>
-				<aside className='w-64 shrink-0 flex flex-col gap-6'>
-					<div>
-						<h3 className='font-medium mb-2'>Harga</h3>
-
-						<input
-							type='range'
-							min='0'
-							max='20000000'
-							step='100000'
-							value={priceMax}
-							onChange={(e) => setPriceMax(Number(e.target.value))}
-							className='w-full'
-						/>
-
-						<div className='flex justify-between text-sm'>
-							<span>Rp 0</span>
-
-							<span>Rp {priceMax.toLocaleString("id-ID")}</span>
-						</div>
-					</div>
-
-					{/* Merek */}
-					<div>
-						<h3 className='font-medium mb-2'>Merek</h3>
-
-						<div className='flex flex-col gap-2'>
-							{brands.map((brand) => (
-								<label
-									key={brand}
-									className='flex items-center gap-2'>
-									<input
-										type='checkbox'
-										checked={selectedBrands.includes(brand)}
-										onChange={() => toggleBrand(brand)}
-									/>
-
-									<span>{brand}</span>
-								</label>
-							))}
-						</div>
-					</div>
-
-					{/* Rating */}
-					<div>
-						<h3 className='font-medium mb-2'>Rating Minimum</h3>
-
-						<div className='flex flex-col gap-2'>
-							{ratingOptions.map((rating) => (
-								<label
-									key={rating}
-									className='flex items-center gap-2'>
-									<input
-										type='radio'
-										name='rating'
-										checked={selectedRating === rating}
-										onChange={() => setSelectedRating(rating)}
-									/>
-
-									<StarRating rating={rating} />
-
-									<span>Ke atas</span>
-								</label>
-							))}
-						</div>
-					</div>
-
-					{/* Stock */}
-					<div>
-						<h3 className='font-medium mb-2'>Ketersediaan</h3>
-
-						<label className='flex items-center gap-2'>
-							<input
-								type='checkbox'
-								checked={inStock}
-								onChange={() => setInStock((prev) => !prev)}
-							/>
-
-							<span>Stok tersedia</span>
-						</label>
-					</div>
-				</aside>
+				<BrowseFilter
+					brands={brands}
+					selectedBrands={selectedBrands}
+					toggleBrand={toggleBrand}
+					selectedRating={selectedRating}
+					setSelectedRating={setSelectedRating}
+					inStock={inStock}
+					setInStock={setInStock}
+					priceMax={priceMax}
+					setPriceMax={setPriceMax}
+				/>
 
 				<div className='flex-1'>
 					<p className='text-sm text-gray-500 mb-4'>{filteredProducts.length} produk</p>
 
 					<div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3'>
-						{displayedProducts.map((product) => (
+						{displayedData.map((product) => (
 							<ProductCard
 								key={product.id}
 								product={product}
@@ -197,12 +99,29 @@ export default function BrowseMain() {
 						))}
 					</div>
 
-					{remainingProducts > 0 && (
-						<div className='flex justify-center mt-8'>
+					{totalPages > 1 && (
+						<div className='flex justify-center items-center gap-2 mt-8 flex-wrap'>
 							<button
-								onClick={() => setVisibleProducts((prev) => prev + 8)}
-								className='px-8 py-3 border border-blue-500 text-blue-500 rounded-lg'>
-								Muat Lebih Banyak ({remainingProducts} produk lagi)
+								onClick={() => setCurrentPage((prev) => prev - 1)}
+								disabled={currentPage === 1}
+								className='px-4 py-2 border rounded-lg disabled:opacity-50'>
+								Prev
+							</button>
+
+							{Array.from({ length: totalPages }, (_, index) => (
+								<button
+									key={index}
+									onClick={() => setCurrentPage(index + 1)}
+									className={`px-4 py-2 border rounded-lg ${currentPage === index + 1 ? "bg-blue-500 text-white border-blue-500" : "bg-white"}`}>
+									{index + 1}
+								</button>
+							))}
+
+							<button
+								onClick={() => setCurrentPage((prev) => prev + 1)}
+								disabled={currentPage === totalPages}
+								className='px-4 py-2 border rounded-lg disabled:opacity-50'>
+								Next
 							</button>
 						</div>
 					)}

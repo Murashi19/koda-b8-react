@@ -15,7 +15,7 @@ import Cart from "../pages/Cart";
 import CheckoutStep1 from "../pages/Checkout/Step1";
 import CheckoutStep2 from "../pages/Checkout/Step2";
 import CheckoutStep3 from "../pages/Checkout/Step3";
-import CheckoutSuccess from "../pages/checkout/success";
+import CheckoutSuccess from "../pages/Checkout/Success";
 
 // Profile
 import MyOrder from "../pages/Profile/MyOrder";
@@ -32,6 +32,10 @@ export const router = createBrowserRouter([
 	{
 		path: "/",
 		element: <LandingPage />,
+	},
+	{
+		path: "/browse-product",
+		element: <BrowseProduct />,
 	},
 	{
 		path: "/browse-product/:slug",
