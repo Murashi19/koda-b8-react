@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { ChevronRight } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import ProductCard from "../ProductCard";
 import BrowseFilter from "../BrowseFilter";
@@ -13,8 +13,8 @@ import category from "../../data/category";
 
 export default function BrowseMain() {
 	const { slug } = useParams();
-
-	const [wishlisted, setWishlisted] = useState({});
+	const [searchParams] = useSearchParams();
+	const searchQuery = searchParams.get("q") ?? "";
 
 	const brands = useMemo(() => [...new Set(products.map((p) => p.brand))], []);
 
@@ -29,20 +29,13 @@ export default function BrowseMain() {
 
 	const selectedCategory = categoriesWithCount.find((cat) => cat.slug === slug);
 
-	const { filteredProducts, selectedBrands, setSelectedBrands, selectedRating, setSelectedRating, inStock, setInStock, priceMax, setPriceMax } = useProductFilter(products, selectedCategory?.name);
+	const { filteredProducts, selectedBrands, setSelectedBrands, selectedRating, setSelectedRating, inStock, setInStock, priceMax, setPriceMax } = useProductFilter(products, selectedCategory?.name, searchQuery);
 
 	const { currentPage, setCurrentPage, totalPages, displayedData } = usePagination(filteredProducts, 16);
 
 	useEffect(() => {
 		setCurrentPage(1);
-	}, [slug, selectedBrands, selectedRating, inStock, priceMax, setCurrentPage]);
-
-	const toggleWishlist = (id) => {
-		setWishlisted((prev) => ({
-			...prev,
-			[id]: !prev[id],
-		}));
-	};
+	}, [slug, searchQuery, selectedBrands, selectedRating, inStock, priceMax, setCurrentPage]);
 
 	const toggleBrand = (brand) => {
 		setSelectedBrands((prev) => (prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]));
@@ -56,6 +49,9 @@ export default function BrowseMain() {
 		);
 	}
 
+	// Judul halaman: prioritaskan search query, lalu kategori, lalu default
+	const pageTitle = searchQuery ? `Hasil pencarian untuk "${searchQuery}"` : slug ? selectedCategory?.name : "Semua Produk";
+
 	return (
 		<main className='max-w-7xl mx-auto px-4 mb-12'>
 			<nav className='flex items-center gap-1 text-sm text-gray-500 mt-6 mb-6'>
@@ -67,37 +63,42 @@ export default function BrowseMain() {
 
 				<ChevronRight className='w-4 h-4' />
 
-				<span>{slug ? selectedCategory?.name : "Semua Produk"}</span>
+				<span>{searchQuery ? "Hasil Pencarian" : slug ? selectedCategory?.name : "Semua Produk"}</span>
 			</nav>
 
-			<h1 className='text-2xl font-medium mb-6'>{slug ? selectedCategory?.name : "Semua Produk"}</h1>
+			<h1 className='text-2xl font-medium mb-6'>{pageTitle}</h1>
 
 			<div className='flex gap-6'>
 				<BrowseFilter
 					brands={brands}
 					selectedBrands={selectedBrands}
-					toggleBrand={toggleBrand}
+					onBrandChange={toggleBrand}
 					selectedRating={selectedRating}
-					setSelectedRating={setSelectedRating}
+					onRatingChange={setSelectedRating}
 					inStock={inStock}
-					setInStock={setInStock}
+					onStockChange={setInStock}
 					priceMax={priceMax}
-					setPriceMax={setPriceMax}
+					onPriceChange={setPriceMax}
+					setCurrentPage={setCurrentPage}
 				/>
 
 				<div className='flex-1'>
 					<p className='text-sm text-gray-500 mb-4'>{filteredProducts.length} produk</p>
 
-					<div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3'>
-						{displayedData.map((product) => (
-							<ProductCard
-								key={product.id}
-								product={product}
-								wishlisted={wishlisted[product.id]}
-								onToggleWishlist={toggleWishlist}
-							/>
-						))}
-					</div>
+					{filteredProducts.length === 0 ? (
+						<div className='flex flex-col items-center justify-center py-20 text-center gap-2'>
+							<p className='text-gray-500 text-sm'>{searchQuery ? `Tidak ada produk yang cocok dengan "${searchQuery}".` : "Tidak ada produk yang cocok dengan filter ini."}</p>
+						</div>
+					) : (
+						<div className='grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3'>
+							{displayedData.map((product) => (
+								<ProductCard
+									key={product.id}
+									product={product}
+								/>
+							))}
+						</div>
+					)}
 
 					{totalPages > 1 && (
 						<div className='flex justify-center items-center gap-2 mt-8 flex-wrap'>

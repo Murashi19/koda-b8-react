@@ -30,10 +30,20 @@ function filterProducts(products, filters) {
         .filter(
             (product) =>
                 !filters.inStock || product.stock > 0
-        );
+        )
+        .filter((product) => {
+            if (!filters.searchQuery) return true;
+
+            const query = filters.searchQuery.toLowerCase().trim();
+            return (
+                product.name.toLowerCase().includes(query) ||
+                product.brand.toLowerCase().includes(query) ||
+                product.category.toLowerCase().includes(query)
+            );
+        });
 }
 
-export default function useProductFilter(products, category) {
+export default function useProductFilter(products, category, searchQuery = "") {
     const [selectedBrands, setSelectedBrands] = useState([]);
     const [selectedRating, setSelectedRating] = useState(null);
     const [inStock, setInStock] = useState(false);
@@ -46,6 +56,7 @@ export default function useProductFilter(products, category) {
             selectedRating,
             inStock,
             priceMax,
+            searchQuery,
         });
     }, [
         products,
@@ -54,6 +65,7 @@ export default function useProductFilter(products, category) {
         selectedRating,
         inStock,
         priceMax,
+        searchQuery,
     ]);
 
     return {

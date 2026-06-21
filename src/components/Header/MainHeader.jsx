@@ -1,11 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Bell, User, ShoppingCart, Heart, TextAlignJustify } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 
 import useLocalStorage from "../../hooks/useLocalStorage";
 
 import AuthContext from "../../context/AuthContext";
-import { useContext } from "react";
+import CartContext from "../../context/CartContext";
+import WishlistContext from "../../context/WishlistContext";
 
 import LogoHeader from "../../assets/logo-header.png";
 
@@ -14,6 +15,8 @@ function MainHeader() {
 	const navigate = useNavigate();
 
 	const { auth } = useContext(AuthContext);
+	const { cart } = useContext(CartContext);
+	const { wishlist } = useContext(WishlistContext);
 	const [users] = useLocalStorage("users");
 
 	useEffect(() => {
@@ -25,9 +28,12 @@ function MainHeader() {
 	const handleSearch = (e) => {
 		e.preventDefault();
 		if (query.trim()) {
-			navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+			navigate(`/browse-product?q=${encodeURIComponent(query.trim())}`);
 		}
 	};
+
+	const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+	const wishlistCount = wishlist.length;
 
 	return (
 		<>
@@ -69,7 +75,7 @@ function MainHeader() {
 				<div className='w-1/4 flex flex-row gap-5 items-center'>
 					{/* Notification */}
 					<button
-						onClick={() => navigate("/notifications")}
+						onClick={() => navigate("/")}
 						className='relative p-1 hover:text-blue-600 transition-colors cursor-pointer'>
 						<Bell className='w-5 h-5' />
 					</button>
@@ -87,6 +93,9 @@ function MainHeader() {
 						onClick={() => navigate("/profile/wishlist")}
 						className='relative p-1 hover:text-red-500 transition-colors cursor-pointer'>
 						<Heart className='w-5 h-5' />
+						{wishlistCount > 0 && (
+							<span className='absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-medium leading-none'>{wishlistCount > 99 ? "99+" : wishlistCount}</span>
+						)}
 					</button>
 
 					{/* Cart */}
@@ -95,6 +104,9 @@ function MainHeader() {
 						onClick={() => navigate("/cart")}
 						className='relative p-1 hover:text-blue-600 transition-colors cursor-pointer'>
 						<ShoppingCart className='w-5 h-5' />
+						{cartCount > 0 && (
+							<span className='absolute -top-1.5 -right-1.5 min-w-4 h-4 px-1 flex items-center justify-center rounded-full bg-[#1a73e8] text-white text-[10px] font-medium leading-none'>{cartCount > 99 ? "99+" : cartCount}</span>
+						)}
 					</button>
 
 					{/* Mobile menu — 768px */}
