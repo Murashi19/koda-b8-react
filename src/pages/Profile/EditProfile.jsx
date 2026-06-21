@@ -1,7 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useContext } from "react";
 
-import { useContext } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { editProfileSchema } from "../../services/validations/editProfileSchema";
@@ -10,35 +8,26 @@ import AuthContext from "../../context/AuthContext";
 
 import useLocalStorage from "../../hooks/useLocalStorage";
 
-import { LogOut, ChevronRight, Camera } from "lucide-react";
+import { Camera } from "lucide-react";
 
 // Components
 import Header from "../../components/Header";
 import ButtonMessage from "../../components/ButtonMessage";
 import Footer from "../../components/Footer";
-
-// Data Nav
-import { navItems } from "../../data/navItem";
-import { orders } from "../../data/order";
-import { initialWishlist } from "../../data/wishlist";
+import ProfileSidebar from "../../components/ProfileSidebar";
 
 const inputClass = "w-full rounded-lg border border-black/10 bg-gray-100 px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-[#1a73e8] transition-colors";
 
 const labelClass = "text-sm font-medium text-gray-900";
 
-function useProfileStats() {
-	const [orderCount] = useState(orders.length);
-	const [wishlistCount] = useState(initialWishlist.length);
-
-	return { orderCount, wishlistCount };
-}
 // Main Page
 export default function EditProfile() {
-	const navigate = useNavigate();
 	const { auth, setAuth } = useContext(AuthContext);
 	const [users, , updateUsers] = useLocalStorage("users");
-	const [activeNav, setActiveNav] = useState("settings");
-	const { orderCount, wishlistCount } = useProfileStats();
+
+	// Cari data user yang sedang login langsung dari "users" (sumber data utama),
+	// bukan dari auth, supaya form selalu menampilkan data ter-update di "users"
+	const currentUser = users.find((user) => user.email === auth?.email);
 
 	const {
 		register,
@@ -50,28 +39,31 @@ export default function EditProfile() {
 	});
 
 	useEffect(() => {
-		if (auth) {
+		if (currentUser) {
 			reset({
-				name: auth.name || "",
-				email: auth.email || "",
-				telepon: auth.telepon || "",
-				tanggalLahir: auth.tanggalLahir || "",
-				jenisKelamin: auth.jenisKelamin || "",
+				name: currentUser.name || "",
+				email: currentUser.email || "",
+				telepon: currentUser.telepon || "",
+				tanggalLahir: currentUser.tanggalLahir || "",
+				jenisKelamin: currentUser.jenisKelamin || "",
 			});
 		}
-	}, [auth, reset]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [auth?.email, reset]);
+
 	const handleSave = (data) => {
 		try {
 			const profileData = {
-				name: data.name?.trim() || auth.name,
-				email: data.email?.trim() || auth.email,
+				name: data.name?.trim() || currentUser.name,
+				email: data.email?.trim() || currentUser.email,
 				telepon: data.telepon?.trim(),
 				tanggalLahir: data.tanggalLahir,
 				jenisKelamin: data.jenisKelamin,
 			};
 
+			// Satu-satunya sumber data: key "users". Tidak ada key "profile" terpisah.
 			const updatedUsers = users.map((user) => {
-				if (user.email === auth.email) {
+				if (user.email === currentUser.email) {
 					return {
 						...user,
 						...profileData,
@@ -84,11 +76,9 @@ export default function EditProfile() {
 			updateUsers(updatedUsers);
 
 			const updatedUser = {
-				...auth,
+				...currentUser,
 				...profileData,
 			};
-
-			localStorage.setItem("profile", JSON.stringify(updatedUser));
 
 			setAuth(updatedUser);
 
@@ -99,16 +89,7 @@ export default function EditProfile() {
 		}
 	};
 
-	const handleNav = (item) => {
-		setActiveNav(item.id);
-		navigate(item.route);
-	};
-
-	const handleLogout = () => {
-		setAuth(null);
-		navigate("/auth/login");
-	};
-	const character = auth?.name?.charAt(0).toUpperCase();
+	const character = currentUser?.name?.charAt(0).toUpperCase();
 
 	return (
 		<>
@@ -117,61 +98,7 @@ export default function EditProfile() {
 			<main className='min-h-screen max-w-[1728px] mx-auto'>
 				<div className='max-w-6xl mx-auto grid grid-cols-4 gap-8 px-4 py-8'>
 					{/* ── Left: Sidebar ── */}
-					<div className='col-span-1 flex flex-col gap-4'>
-						{/* Avatar card */}
-						<div className='flex flex-col items-center gap-3 bg-white border border-black/10 rounded-2xl p-5'>
-							<div className='w-16 h-16 rounded-full bg-blue-600/10 flex items-center justify-center'>
-								<span className='text-xl font-bold text-[#1a73e8]'>{character}</span>
-							</div>
-							<div className='flex flex-col items-center gap-1'>
-								<h2 className='text-base font-semibold text-gray-900'>{auth?.name}</h2>
-								<span className='text-xs text-gray-500'>{auth?.email}</span>
-							</div>
-							<div className='w-full flex justify-center gap-6 pt-3 border-t border-black/10'>
-								<div className='flex flex-col items-center gap-1'>
-									<span className='text-sm font-bold text-gray-900'>{orderCount}</span>
-									<span className='text-xs text-gray-500'>Pesanan</span>
-								</div>
-								<div className='flex flex-col items-center gap-1'>
-									<span className='text-sm font-bold text-gray-900'>{wishlistCount}</span>
-									<span className='text-xs text-gray-500'>Wishlist</span>
-								</div>
-							</div>
-						</div>
-
-						{/* Nav card */}
-						<div className='flex flex-col bg-white border border-black/10 rounded-2xl overflow-hidden'>
-							{navItems.map((item) => {
-								const Icon = item.icon;
-								const isActive = activeNav === item.id;
-								return (
-									<button
-										key={item.id}
-										onClick={() => handleNav(item)}
-										className={`flex items-center justify-between gap-3 px-5 py-4 transition-colors cursor-pointer ${isActive ? "bg-blue-50" : "bg-white hover:bg-gray-50"}`}>
-										<Icon
-											className={`w-4 h-4 shrink-0 ${isActive ? "text-[#1a73e8]" : "text-gray-500"}`}
-											strokeWidth={2}
-										/>
-										<span className={`flex-1 text-left text-base font-normal ${isActive ? "text-[#1a73e8]" : "text-gray-500"}`}>{item.label}</span>
-										<ChevronRight
-											className={`w-4 h-4 ${isActive ? "text-[#1a73e8]" : "text-gray-500"}`}
-											strokeWidth={2}
-										/>
-									</button>
-								);
-							})}
-							<button
-								onClick={handleLogout}
-								className='flex items-center gap-3 px-5 py-4 border-t border-black/10 bg-white hover:bg-red-50 transition-colors cursor-pointer'>
-								<LogOut
-									className='w-4 h-4 text-red-600 shrink-0'
-									strokeWidth={2}
-								/>
-								<span className='text-base font-normal text-red-600'>Keluar</span>
-							</button>
-						</div>
-					</div>
+					<ProfileSidebar activeNav='settings' />
 
 					{/* ── Right: Edit Profile ── */}
 					<div className='col-span-3 flex flex-col gap-4 bg-white border border-black/10 rounded-2xl p-5'>
@@ -179,8 +106,8 @@ export default function EditProfile() {
 						<div className='flex items-center justify-between gap-4'>
 							<h2 className='text-2xl font-semibold text-gray-900'>Pengaturan Profile</h2>
 							<button
-								type='button'
-								onClick={handleSave}
+								type='submit'
+								form='edit-profile-form'
 								className='border border-[#1a73e8] text-[#1a73e8] text-sm font-medium px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer'>
 								Simpan
 							</button>
@@ -188,11 +115,12 @@ export default function EditProfile() {
 
 						{/* Form card */}
 						<form
+							id='edit-profile-form'
 							onSubmit={handleSubmit(handleSave)}
 							className='w-full flex flex-col gap-4 bg-white border border-black/10 rounded-2xl p-6'>
 							{/* Avatar upload */}
 							<div className='flex items-center gap-4'>
-								<div className='w-20 h-20 rounded-full bg-blue-600/10 flex items-center justify-center text-2xl font-bold text-[#1a73e8] shrink-0'>B</div>
+								<div className='w-20 h-20 rounded-full bg-blue-600/10 flex items-center justify-center text-2xl font-bold text-[#1a73e8] shrink-0'>{character}</div>
 								<label
 									htmlFor='unggah-foto'
 									className='flex items-center gap-2 text-sm font-medium text-[#1a73e8] cursor-pointer hover:underline'>
@@ -209,7 +137,6 @@ export default function EditProfile() {
 									className='hidden'
 									{...register("foto")}
 								/>
-								{errors.foto && <span className='text-xs text-red-600'>{errors.foto.message}</span>}
 							</div>
 
 							{/* Form fields */}
@@ -222,7 +149,7 @@ export default function EditProfile() {
 									className={inputClass}
 									{...register("name")}
 								/>
-								{errors.nama && <span className='text-xs text-red-600'>{errors.nama.message}</span>}
+								{errors.name && <span className='text-xs text-red-600'>{errors.name.message}</span>}
 							</div>
 
 							<div className='flex flex-col gap-1.5'>

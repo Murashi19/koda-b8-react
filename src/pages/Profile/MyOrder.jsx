@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 // Components
 import Header from "../../components/Header";
 import ButtonMessage from "../../components/ButtonMessage";
@@ -7,18 +5,16 @@ import Footer from "../../components/Footer";
 import OrderCard from "../../components/OrderCard";
 import ProfileSidebar from "../../components/ProfileSidebar";
 
-// Data order
-import { orders } from "../../data/order";
-
-const ORDERS_PER_PAGE = 3;
+import usePagination from "../../hooks/usePagination";
+import useLocalStorage from "../../hooks/useLocalStorage";
 
 export default function MyOrder() {
-	const [currentPage, setCurrentPage] = useState(1);
+	const [orders] = useLocalStorage("orders");
 
-	const totalPages = Math.ceil(orders.length / ORDERS_PER_PAGE);
+	// Pesanan terbaru ditampilkan paling atas
+	const sortedOrders = [...orders].reverse();
 
-	// Slice data sesuai halaman aktif
-	const paginatedOrders = orders.slice((currentPage - 1) * ORDERS_PER_PAGE, currentPage * ORDERS_PER_PAGE);
+	const { currentPage, setCurrentPage, totalPages, displayedData } = usePagination(sortedOrders, 3);
 
 	return (
 		<>
@@ -36,43 +32,51 @@ export default function MyOrder() {
 							<span className='text-sm text-gray-400'>{orders.length} pesanan</span>
 						</div>
 
-						{/* Order List */}
-						{paginatedOrders.map((order) => (
-							<OrderCard
-								key={order.id}
-								order={order}
-							/>
-						))}
-
-						{/* Pagination */}
-						{totalPages > 1 && (
-							<div className='flex items-center justify-center gap-2 pt-4 border-t border-black/10'>
-								{/* Prev */}
-								<button
-									onClick={() => setCurrentPage((p) => p - 1)}
-									disabled={currentPage === 1}
-									className='px-3 py-1.5 text-sm rounded-lg border border-black/10 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors'>
-									← Prev
-								</button>
-
-								{/* Page Numbers */}
-								{Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-									<button
-										key={page}
-										onClick={() => setCurrentPage(page)}
-										className={`w-8 h-8 text-sm rounded-lg transition-colors ${currentPage === page ? "bg-[#1a73e8] text-white font-semibold" : "border border-black/10 text-gray-500 hover:bg-gray-50"}`}>
-										{page}
-									</button>
+						{orders.length === 0 ? (
+							<div className='flex flex-col items-center justify-center py-16 gap-3 text-gray-400'>
+								<p className='text-sm'>Belum ada pesanan.</p>
+							</div>
+						) : (
+							<>
+								{/* Order List */}
+								{displayedData.map((order) => (
+									<OrderCard
+										key={order.id}
+										order={order}
+									/>
 								))}
 
-								{/* Next */}
-								<button
-									onClick={() => setCurrentPage((p) => p + 1)}
-									disabled={currentPage === totalPages}
-									className='px-3 py-1.5 text-sm rounded-lg border border-black/10 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors'>
-									Next →
-								</button>
-							</div>
+								{/* Pagination */}
+								{totalPages > 1 && (
+									<div className='flex items-center justify-center gap-2 pt-4 border-t border-black/10'>
+										{/* Prev */}
+										<button
+											onClick={() => setCurrentPage((p) => p - 1)}
+											disabled={currentPage === 1}
+											className='px-3 py-1.5 text-sm rounded-lg border border-black/10 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors'>
+											← Prev
+										</button>
+
+										{/* Page Numbers */}
+										{Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+											<button
+												key={page}
+												onClick={() => setCurrentPage(page)}
+												className={`w-8 h-8 text-sm rounded-lg transition-colors ${currentPage === page ? "bg-[#1a73e8] text-white font-semibold" : "border border-black/10 text-gray-500 hover:bg-gray-50"}`}>
+												{page}
+											</button>
+										))}
+
+										{/* Next */}
+										<button
+											onClick={() => setCurrentPage((p) => p + 1)}
+											disabled={currentPage === totalPages}
+											className='px-3 py-1.5 text-sm rounded-lg border border-black/10 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors'>
+											Next →
+										</button>
+									</div>
+								)}
+							</>
 						)}
 					</div>
 				</div>

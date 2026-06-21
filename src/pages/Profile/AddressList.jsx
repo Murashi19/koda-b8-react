@@ -1,27 +1,42 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { MapPin, Plus, Pencil, Trash2 } from "lucide-react";
 
 // Components
 import Header from "../../components/Header";
 import ButtonMessage from "../../components/ButtonMessage";
 import Footer from "../../components/Footer";
-
-// Address Data
-import { initialAddresses } from "../../data/addressList";
 import ProfileSidebar from "../../components/ProfileSidebar";
+import AddressModal from "../../components/AddressModal";
+
+// Hooks
+import useLocalStorage from "../../hooks/useLocalStorage";
 
 // Main Page
 export default function AddressList() {
-	const navigate = useNavigate();
-	const [addresses, setAddresses] = useState(initialAddresses);
+	const [addresses, saveAddress, updateAddresses] = useLocalStorage("addresses");
+	const [modalMode, setModalMode] = useState(null); // null | "add" | { mode: "edit", data }
 
 	const handleSetMain = (id) => {
-		setAddresses((prev) => prev.map((a) => ({ ...a, isMain: a.id === id })));
+		updateAddresses(addresses.map((a) => ({ ...a, isMain: a.id === id })));
 	};
 
 	const handleDelete = (id) => {
-		setAddresses((prev) => prev.filter((a) => a.id !== id));
+		updateAddresses(addresses.filter((a) => a.id !== id));
+	};
+
+	const handleAdd = (formData) => {
+		const newAddress = {
+			...formData,
+			id: Date.now(),
+			isMain: addresses.length === 0, // alamat pertama otomatis jadi utama
+		};
+		saveAddress(newAddress);
+		setModalMode(null);
+	};
+
+	const handleEdit = (formData) => {
+		updateAddresses(addresses.map((a) => (a.id === modalMode.data.id ? { ...a, ...formData } : a)));
+		setModalMode(null);
 	};
 
 	return (
@@ -40,6 +55,7 @@ export default function AddressList() {
 							<h2 className='text-xl font-medium text-gray-900'>Alamat Saya</h2>
 							<button
 								type='button'
+								onClick={() => setModalMode("add")}
 								className='flex items-center gap-2 h-10 px-4 bg-[#1a73e8] hover:bg-blue-600 text-white text-sm font-medium rounded-xl transition-colors'>
 								<Plus
 									className='w-4 h-4'
@@ -80,7 +96,7 @@ export default function AddressList() {
 													</button>
 												)}
 												<button
-													onClick={() => navigate(`/profile/address/edit/${addr.id}`)}
+													onClick={() => setModalMode({ mode: "edit", data: addr })}
 													className='w-8 h-8 flex items-center justify-center rounded-lg border border-black/10 hover:bg-gray-100 transition-colors'>
 													<Pencil
 														className='w-3.5 h-3.5 text-gray-500'
@@ -105,7 +121,9 @@ export default function AddressList() {
 											<p className='text-sm font-medium text-gray-900'>
 												{addr.name} · {addr.phone}
 											</p>
-											<p className='text-sm text-gray-500'>{addr.address}</p>
+											<p className='text-sm text-gray-500'>
+												{addr.address}, {addr.kota}, {addr.provinsi} {addr.kodePos}
+											</p>
 										</div>
 									</div>
 								))}
@@ -115,6 +133,23 @@ export default function AddressList() {
 				</div>
 			</main>
 			<Footer />
+
+			{/* Modal Tambah */}
+			{modalMode === "add" && (
+				<AddressModal
+					onClose={() => setModalMode(null)}
+					onSave={handleAdd}
+				/>
+			)}
+
+			{/* Modal Edit */}
+			{modalMode?.mode === "edit" && (
+				<AddressModal
+					initialData={modalMode.data}
+					onClose={() => setModalMode(null)}
+					onSave={handleEdit}
+				/>
+			)}
 		</>
 	);
 }

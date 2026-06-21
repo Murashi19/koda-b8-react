@@ -1,15 +1,19 @@
 // src/components/ProfileSidebar.jsx
-import { useState, useContext } from "react";
+import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, ChevronRight } from "lucide-react";
+import { IoChevronForward } from "react-icons/io5";
+import { FaSignOutAlt } from "react-icons/fa";
 import { navItems } from "../data/navItem.js";
-import { orders } from "../data/order";
-import { initialWishlist } from "../data/wishlist";
+
 import AuthContext from "../context/AuthContext.js";
+import useLocalStorage from "../hooks/useLocalStorage.js";
 
 function useProfileStats() {
-	const [orderCount] = useState(orders.length);
-	const [wishlistCount] = useState(initialWishlist.length);
+	const [order] = useLocalStorage("orders");
+	const [wishlist] = useLocalStorage("wishlist");
+
+	const orderCount = order.length;
+	const wishlistCount = wishlist.length;
 
 	return { orderCount, wishlistCount };
 }
@@ -17,7 +21,7 @@ function useProfileStats() {
 export default function ProfileSidebar({ activeNav }) {
 	const navigate = useNavigate();
 	const { orderCount, wishlistCount } = useProfileStats();
-	const { auth } = useContext(AuthContext);
+	const { auth, setAuth } = useContext(AuthContext);
 
 	const character = auth?.name?.charAt(0).toUpperCase();
 
@@ -26,7 +30,7 @@ export default function ProfileSidebar({ activeNav }) {
 	};
 
 	const handleLogout = () => {
-		// TODO: clear auth state / token
+		setAuth(null);
 		navigate("/auth/login");
 	};
 
@@ -68,7 +72,7 @@ export default function ProfileSidebar({ activeNav }) {
 								strokeWidth={2}
 							/>
 							<span className={`flex-1 text-left text-base font-normal ${isActive ? "text-[#1a73e8]" : "text-gray-500"}`}>{item.label}</span>
-							<ChevronRight
+							<IoChevronForward
 								className={`w-4 h-4 ${isActive ? "text-[#1a73e8]" : "text-gray-500"}`}
 								strokeWidth={2}
 							/>
@@ -80,7 +84,7 @@ export default function ProfileSidebar({ activeNav }) {
 				<button
 					onClick={handleLogout}
 					className='flex items-center gap-3 px-5 py-4 border-t border-black/10 bg-white hover:bg-red-50 transition-colors cursor-pointer'>
-					<LogOut
+					<FaSignOutAlt
 						className='w-4 h-4 text-red-600 shrink-0'
 						strokeWidth={2}
 					/>
