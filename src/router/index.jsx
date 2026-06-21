@@ -54,7 +54,7 @@ export const router = createBrowserRouter([
 		element: <ForgotPassword />,
 	},
 	{
-		path: "/detail-page",
+		path: "/detail-page/:id",
 		element: <DetailPage />,
 	},
 	{

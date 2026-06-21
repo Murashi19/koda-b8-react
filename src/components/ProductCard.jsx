@@ -1,4 +1,5 @@
 import { Heart, ShoppingCart } from "lucide-react";
+import { Link } from "react-router-dom";
 import StarRating from "./StarsRate";
 import useCart from "../hooks/useCart";
 import useWishlist from "../hooks/useWishlist";
@@ -9,8 +10,22 @@ export default function ProductCard({ product }) {
 
 	const wishlisted = isWishlisted(product.id);
 
+	const handleToggleWishlist = (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		toggleWishlist(product);
+	};
+
+	const handleAddToCart = (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		addToCart(product);
+	};
+
 	return (
-		<div className='flex flex-col bg-white border border-black/10 rounded-xl overflow-hidden'>
+		<Link
+			to={`/detail-page/${product.id}`}
+			className='flex flex-col bg-white border border-black/10 rounded-xl overflow-hidden hover:shadow-md transition-shadow'>
 			<div className='relative aspect-square'>
 				<img
 					src={product.image}
@@ -20,7 +35,7 @@ export default function ProductCard({ product }) {
 				<span className={`absolute top-2 left-2 h-6 min-w-11.25 px-2.5 flex items-center justify-center rounded-full text-xs text-white ${product.badgeType === "new" ? "bg-[#1a73e8]" : "bg-red-600"}`}>{product.badge}</span>
 				<button
 					type='button'
-					onClick={() => toggleWishlist(product)}
+					onClick={handleToggleWishlist}
 					className='absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 flex items-center justify-center hover:bg-white transition-colors'>
 					<Heart
 						className='w-4 h-4'
@@ -44,7 +59,7 @@ export default function ProductCard({ product }) {
 				</div>
 				<button
 					type='button'
-					onClick={() => addToCart(product)}
+					onClick={handleAddToCart}
 					className='mt-1 flex items-center justify-center gap-2 w-full h-9 rounded-lg bg-[#1a73e8] text-white text-sm font-medium hover:bg-[#1558b0] transition-colors'>
 					<ShoppingCart
 						className='w-4 h-4'
@@ -53,6 +68,6 @@ export default function ProductCard({ product }) {
 					Add to Cart
 				</button>
 			</div>
-		</div>
+		</Link>
 	);
 }
