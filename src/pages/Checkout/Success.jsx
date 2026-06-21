@@ -1,5 +1,12 @@
 import { CircleCheckBig, Truck, MapPin, Package, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import useLocalStorage from "../../hooks/useLocalStorage";
+
+const shippingLabels = {
+	"jne-reg": "JNE Reguler",
+	"jne-exp": "JNE Express",
+	"same-day": "Same Day Delivery",
+};
 
 const orderStatuses = [
 	{
@@ -51,13 +58,32 @@ const orderStatuses = [
 		),
 		iconBg: "bg-gray-200",
 		label: "Terkirim",
-		sub: "2-3 Juni 2026",
+		sub: "Estimasi mengikuti metode pengiriman",
 		done: false,
 	},
 ];
 
 export default function CheckoutSuccess() {
 	const navigate = useNavigate();
+	const [orders] = useLocalStorage("orders");
+	console.log("DEBUG orders:", orders);
+
+	const order = orders[orders.length - 1];
+	console.log("DEBUG order (terakhir):", order);
+	if (!order) {
+		return (
+			<main className='min-h-screen max-w-[1728px] mx-auto flex flex-col items-center justify-center gap-4 px-4 py-12'>
+				<p className='text-gray-500 text-sm'>Tidak ada pesanan yang ditemukan.</p>
+				<button
+					type='button'
+					onClick={() => navigate("/")}
+					className='px-5 py-2.5 rounded-xl bg-[#1a73e8] hover:bg-blue-500 text-white text-sm font-medium transition-colors'>
+					Kembali Belanja
+				</button>
+			</main>
+		);
+	}
+
 	return (
 		<>
 			<main className='min-h-screen max-w-[1728px] mx-auto'>
@@ -83,11 +109,11 @@ export default function CheckoutSuccess() {
 						<div className='flex justify-between items-center'>
 							<div className='flex flex-col gap-0.5'>
 								<span className='text-sm font-normal text-gray-500'>No. Pesanan</span>
-								<span className='text-base font-bold text-[#1a73e8]'>#BM28371132</span>
+								<span className='text-base font-bold text-[#1a73e8]'>#{order?.id}</span>
 							</div>
 							<div className='flex flex-col items-end gap-0.5'>
 								<span className='text-sm font-normal text-gray-500'>Total Pembayaran</span>
-								<span className='text-base font-bold text-gray-900'>Rp 450.000</span>
+								<span className='text-base font-bold text-gray-900'>{order?.total}</span>
 							</div>
 						</div>
 
@@ -102,8 +128,8 @@ export default function CheckoutSuccess() {
 									strokeWidth={2}
 								/>
 								<div className='flex flex-col'>
-									<span className='text-sm text-gray-900'>JNE Reguler</span>
-									<span className='text-xs text-gray-500'>Estimasi tiba: 2-3 Juni 2026</span>
+									<span className='text-sm text-gray-900'>{shippingLabels[order.shippingMethod] ?? "-"}</span>
+									<span className='text-xs text-gray-500'>Pesanan dibuat: {order.date}</span>
 								</div>
 							</div>
 							<div className='flex items-start gap-3'>
@@ -113,7 +139,9 @@ export default function CheckoutSuccess() {
 								/>
 								<div className='flex flex-col'>
 									<span className='text-sm text-gray-900'>Alamat Pengiriman</span>
-									<span className='text-xs text-gray-500'>Jl. Kebon Jeruk No. 15, Jakarta Barat, DKI Jakarta 11530</span>
+									<span className='text-xs text-gray-500'>
+										{order.shipping?.alamat}, {order.shipping?.kota}, {order.shipping?.provinsi} {order.shipping?.kodePos}
+									</span>
 								</div>
 							</div>
 						</div>
@@ -147,7 +175,7 @@ export default function CheckoutSuccess() {
 						<button
 							type='button'
 							onClick={() => navigate("/profile/my-orders")}
-							className='h-12.5 rounded-xl px-6 bg-[#1a73e8] hover:bg-blue-600 text-white text-base font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer'>
+							className='h-12.5 rounded-xl px-6 bg-[#1a73e8] hover:bg-blue-600 text-white text-base font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer border-none'>
 							<Package
 								className='w-4 h-4'
 								strokeWidth={2}

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 
 import Header from "../components/Header";
@@ -8,6 +9,27 @@ import OrderSummary from "../components/OrderSummary";
 
 export default function CheckoutLayout() {
 	const location = useLocation();
+
+	// Data yang dikumpulkan sepanjang flow checkout (step1 -> step2 -> step3)
+	const [checkoutData, setCheckoutData] = useState({
+		shipping: {
+			nama: "",
+			telepon: "",
+			email: "",
+			alamat: "",
+			kota: "",
+			provinsi: "",
+			kodePos: "",
+			catatan: "",
+		},
+		shippingMethod: null,
+		paymentMethod: null,
+	});
+
+	// Merge partial update, supaya tiap step cukup kirim bagian yang dia isi saja
+	const updateCheckoutData = (partial) => {
+		setCheckoutData((prev) => ({ ...prev, ...partial }));
+	};
 
 	const getCurrentStep = () => {
 		switch (location.pathname) {
@@ -38,7 +60,7 @@ export default function CheckoutLayout() {
 					<ProgressBar currentStep={getCurrentStep()} />
 
 					<div className='flex flex-row items-start gap-8 w-full'>
-						<Outlet />
+						<Outlet context={{ checkoutData, updateCheckoutData }} />
 
 						<OrderSummary />
 					</div>

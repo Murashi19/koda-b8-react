@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CreditCard, ChevronRight, Lock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 
 const paymentMethods = [
 	{ id: "bca", icon: "🏦", label: "Virtual Account BCA" },
@@ -13,7 +13,13 @@ const paymentMethods = [
 
 export default function CheckoutStep2() {
 	const navigate = useNavigate();
-	const [selectedPayment, setSelectedPayment] = useState("bca");
+	const { checkoutData, updateCheckoutData } = useOutletContext();
+	const [selectedPayment, setSelectedPayment] = useState(checkoutData.paymentMethod ?? "bca");
+
+	const handleContinue = () => {
+		updateCheckoutData({ paymentMethod: selectedPayment });
+		navigate("/checkout/step3");
+	};
 
 	return (
 		<>
@@ -67,7 +73,7 @@ export default function CheckoutStep2() {
 					</button>
 					<button
 						type='button'
-						onClick={() => navigate("/checkout/step3")}
+						onClick={handleContinue}
 						className='flex-1 h-12 rounded-xl bg-[#1a73e8] hover:bg-blue-600 text-white text-base font-medium flex items-center justify-center gap-2 transition-colors'>
 						<span>Lanjut Ke Pembayaran</span>
 						<ChevronRight

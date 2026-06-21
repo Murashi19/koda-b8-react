@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Truck, ChevronRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 
 // Shipping Methods
 const shippingOptions = [
@@ -10,7 +10,7 @@ const shippingOptions = [
 ];
 
 // Form Fields
-const inputClass = "w-full h-11 rounded-xl border border-black/10 bg-gray-50 px-4 text-sm text-gray-900 outline-none focus:border-[#1a73e8] transition-colors placeholder:text-gray-400";
+const inputClass = (hasError) => `w-full h-11 rounded-xl border ${hasError ? "border-red-400" : "border-black/10"} bg-gray-50 px-4 text-sm text-gray-900 outline-none focus:border-[#1a73e8] transition-colors placeholder:text-gray-400`;
 
 const textareaClass = "w-full rounded-xl border border-black/10 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none focus:border-[#1a73e8] transition-colors placeholder:text-gray-400 resize-none h-20";
 
@@ -23,10 +23,53 @@ function Label({ children, required }) {
 	);
 }
 
+const REQUIRED_FIELDS = ["nama", "telepon", "email", "alamat", "kota", "provinsi", "kodePos"];
+
 // Main Page
 export default function CheckoutStep1() {
 	const navigate = useNavigate();
-	const [selectedShipping, setSelectedShipping] = useState("same-day");
+	const { checkoutData, updateCheckoutData } = useOutletContext();
+
+	const [form, setForm] = useState(checkoutData.shipping);
+	const [selectedShipping, setSelectedShipping] = useState(checkoutData.shippingMethod ?? "same-day");
+	const [errors, setErrors] = useState({});
+
+	const handleChange = (e) => {
+		const { name, value } = e.target;
+		setForm((prev) => ({ ...prev, [name]: value }));
+		// Hapus error field begitu user mulai mengetik ulang
+		if (errors[name]) {
+			setErrors((prev) => ({ ...prev, [name]: undefined }));
+		}
+	};
+
+	const validate = () => {
+		const newErrors = {};
+
+		REQUIRED_FIELDS.forEach((field) => {
+			if (!form[field]?.trim()) {
+				newErrors[field] = "Wajib diisi";
+			}
+		});
+
+		if (form.email?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+			newErrors.email = "Format email tidak valid";
+		}
+
+		if (form.telepon?.trim() && !/^[0-9+\-\s]{8,15}$/.test(form.telepon)) {
+			newErrors.telepon = "Format nomor telepon tidak valid";
+		}
+
+		setErrors(newErrors);
+		return Object.keys(newErrors).length === 0;
+	};
+
+	const handleContinue = () => {
+		if (!validate()) return;
+
+		updateCheckoutData({ shipping: form, shippingMethod: selectedShipping });
+		navigate("/checkout/step2");
+	};
 
 	return (
 		<>
@@ -49,8 +92,11 @@ export default function CheckoutStep1() {
 							type='text'
 							name='nama'
 							placeholder='Budi Santoso'
-							className={inputClass}
+							value={form.nama}
+							onChange={handleChange}
+							className={inputClass(errors.nama)}
 						/>
+						{errors.nama && <p className='text-xs text-red-500 mt-1'>{errors.nama}</p>}
 					</div>
 
 					<div>
@@ -59,8 +105,11 @@ export default function CheckoutStep1() {
 							type='tel'
 							name='telepon'
 							placeholder='0812-3456-7890'
-							className={inputClass}
+							value={form.telepon}
+							onChange={handleChange}
+							className={inputClass(errors.telepon)}
 						/>
+						{errors.telepon && <p className='text-xs text-red-500 mt-1'>{errors.telepon}</p>}
 					</div>
 
 					<div className='col-span-2'>
@@ -69,8 +118,11 @@ export default function CheckoutStep1() {
 							type='email'
 							name='email'
 							placeholder='budi@email.com'
-							className={inputClass}
+							value={form.email}
+							onChange={handleChange}
+							className={inputClass(errors.email)}
 						/>
+						{errors.email && <p className='text-xs text-red-500 mt-1'>{errors.email}</p>}
 					</div>
 
 					<div className='col-span-2'>
@@ -79,8 +131,11 @@ export default function CheckoutStep1() {
 							type='text'
 							name='alamat'
 							placeholder='Jl. Kebon Jeruk No. 15'
-							className={inputClass}
+							value={form.alamat}
+							onChange={handleChange}
+							className={inputClass(errors.alamat)}
 						/>
+						{errors.alamat && <p className='text-xs text-red-500 mt-1'>{errors.alamat}</p>}
 					</div>
 
 					<div>
@@ -89,8 +144,11 @@ export default function CheckoutStep1() {
 							type='text'
 							name='kota'
 							placeholder='Jakarta Barat'
-							className={inputClass}
+							value={form.kota}
+							onChange={handleChange}
+							className={inputClass(errors.kota)}
 						/>
+						{errors.kota && <p className='text-xs text-red-500 mt-1'>{errors.kota}</p>}
 					</div>
 
 					<div>
@@ -99,8 +157,11 @@ export default function CheckoutStep1() {
 							type='text'
 							name='provinsi'
 							placeholder='DKI Jakarta'
-							className={inputClass}
+							value={form.provinsi}
+							onChange={handleChange}
+							className={inputClass(errors.provinsi)}
 						/>
+						{errors.provinsi && <p className='text-xs text-red-500 mt-1'>{errors.provinsi}</p>}
 					</div>
 
 					<div>
@@ -109,8 +170,11 @@ export default function CheckoutStep1() {
 							type='text'
 							name='kodePos'
 							placeholder='11530'
-							className={inputClass}
+							value={form.kodePos}
+							onChange={handleChange}
+							className={inputClass(errors.kodePos)}
 						/>
+						{errors.kodePos && <p className='text-xs text-red-500 mt-1'>{errors.kodePos}</p>}
 					</div>
 
 					<div>
@@ -118,6 +182,8 @@ export default function CheckoutStep1() {
 						<textarea
 							name='catatan'
 							placeholder='Warna pagar, dll.'
+							value={form.catatan}
+							onChange={handleChange}
 							className={textareaClass}
 						/>
 					</div>
@@ -150,7 +216,7 @@ export default function CheckoutStep1() {
 				{/* Continue Button */}
 				<button
 					type='button'
-					onClick={() => navigate("/checkout/step2")}
+					onClick={handleContinue}
 					className='w-full h-12 rounded-xl bg-[#1a73e8] hover:bg-blue-600 text-white text-base font-medium flex items-center justify-center gap-2 transition-colors'>
 					<span>Lanjut Ke Pembayaran</span>
 					<ChevronRight
