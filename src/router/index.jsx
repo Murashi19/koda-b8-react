@@ -22,7 +22,7 @@ import MyOrder from "../pages/Profile/MyOrder";
 import Wishlist from "../pages/Profile/Wishlist";
 import AddressList from "../pages/Profile/AddressList";
 import EditProfile from "../pages/Profile/EditProfile";
-import AdminDashboard from "../pages/Admin/dashboard";
+import AdminDashboard from "../pages/Admin/Dashboard";
 import ProductList from "../pages/Admin/ProductList";
 import OrderList from "../pages/Admin/OrderList";
 import CustomerList from "../pages/Admin/Customers";

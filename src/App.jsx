@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { RouterProvider } from "react-router";
 import { router } from "./router";
 import "./index.css";
@@ -7,7 +8,20 @@ import WishlistContext from "./context/WishlistContext";
 import useLocalStorage from "./hooks/useLocalStorage";
 
 function App() {
-	const [auth, setAuth] = useLocalStorage("auth", null);
+	const [auth, setAuthState] = useState(() => {
+		const stored = localStorage.getItem("auth");
+		return stored ? JSON.parse(stored) : null;
+	});
+
+	const setAuth = (user) => {
+		setAuthState(user);
+		if (user) {
+			localStorage.setItem("auth", JSON.stringify(user));
+		} else {
+			localStorage.removeItem("auth");
+		}
+	};
+
 	const [cart, , updateCart] = useLocalStorage("cart", []);
 	const [wishlist, , updateWishlist] = useLocalStorage("wishlist", []);
 
