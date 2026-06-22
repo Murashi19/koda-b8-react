@@ -34,11 +34,9 @@ function Login() {
 		resolver: yupResolver(loginSchema),
 		mode: "all",
 	});
+
 	function processLogin(e) {
 		const data = e;
-		console.log(data);
-		console.log(users);
-
 		const existing = users.find((user) => user.email === data.email);
 
 		if (!existing) {
@@ -57,157 +55,184 @@ function Login() {
 	}
 
 	const toggleShowPassword = () => setShowPassword((prev) => !prev);
+
 	return (
-		<>
-			<div className='h-screen flex justify-between'>
-				<div
-					className='w-1/2 h-full p-30 bg-cover bg-center flex flex-col'
-					style={{ backgroundImage: `linear-gradient(rgba(20,73,230,0.8),rgba(49,44,133,0.8)), url(${BgImage})` }}>
-					<div className='w-140 cursor-pointer'>
-						<div className='flex items-center gap-2 text-white text-sm font-semibold'>
-							<img
-								src={Logo}
-								alt='Logo BeliMudah'
-								className='w-12 h-12'
-							/>
-							<span className='flex justify-center items-center font-semibold text-white text-2xl whitespace-nowrap'>BeliMudah</span>
-						</div>
-					</div>
-					<div className='w-md flex flex-col justify-center my-auto mx-0 text-white'>
-						<div className='text-5xl font-bold  mb-10'>Belanja lebih mudah, hidup lebih praktis</div>
-						<div className='flex justify-center items-center text-lg'>Ribuan produk pilihan dengan harga terbaik, pengiriman cepat, dan pembayaran yang aman.</div>
-
-						<div className='flex justify-start items-center gap-10 mt-10 text-2xl'>
-							<div className='flex flex-col gap-1'>
-								<div className='font-bold'>10rb+</div>
-								<span className='text-lg'>Produk</span>
-							</div>
-
-							<div className='flex flex-col gap-1'>
-								<div className='font-bold'>500rb+</div>
-								<span className='text-lg'>Pelanggan</span>
-							</div>
-
-							<div className='flex flex-col gap-1'>
-								<div className='font-bold'>4.8★</div>
-								<span className='text-lg'>Rating</span>
-							</div>
-						</div>
-					</div>
-					<div className='text-lg text-gray-300 flex justify-start mt-auto'>© 2026 BeliMudah. Seluruh hak cipta dilindungi.</div>
+		<div className='min-h-screen flex flex-col lg:flex-row'>
+			{/* ── Left panel: hidden on mobile, shown md+ ── */}
+			<div
+				className='hidden md:flex w-full lg:w-1/2 min-h-70 lg:min-h-screen p-8 lg:p-16 bg-cover bg-center flex-col'
+				style={{
+					backgroundImage: `linear-gradient(rgba(20,73,230,0.85),rgba(49,44,133,0.85)), url(${BgImage})`,
+				}}>
+				{/* Logo */}
+				<div className='flex items-center gap-2 text-white'>
+					<img
+						src={Logo}
+						alt='Logo BeliMudah'
+						className='w-10 h-10 lg:w-12 lg:h-12'
+					/>
+					<span className='font-semibold text-white text-xl lg:text-2xl whitespace-nowrap'>BeliMudah</span>
 				</div>
-				<div className='w-1/2 h-full p-30 flex flex-col justify-center items-center'>
-					<div className='w-2/3 flex flex-col gap-4 justify-center items-center mb-10'>
-						<div className='w-full flex flex-col justify-center items-start mt-4 mb-2'>
-							<div className='text-4xl font-bold text-black-100 mb-1'>Masuk Akun</div>
-							<span className='text-lg text-gray-700 mb-4'>
-								Belum punya akun?{" "}
-								<Link
-									className='ml-2 no-underscore text-blue-600'
-									to='/auth/register'>
-									Daftar gratis
-								</Link>
-							</span>
-						</div>
-						<div className='w-full grid-cols-2 flex flex-row gap-2 mb-2'>
-							<button
-								type='button'
-								className='w-full text-sm text-gray-600 rounded-xl border border-black-100 p-2'>
-								Google
-							</button>
-							<button
-								type='button'
-								className='w-full text-sm text-gray-600 rounded-xl border border-black-100 p-2'>
-								Facebook
-							</button>
-						</div>
-						<div className='w-full flex justify-between items-center text-sm text-gray-600 gap-2'>
-							<div className='w-1/2 h-px bg-gray-300'></div>
-							<span className='w-full text-sm text-gray-600 text-center'>atau masuk dengan email</span>
-							<div className='w-1/2 h-px bg-gray-300'></div>
-						</div>
 
-						<form
-							id='form-login'
-							action=''
-							onSubmit={handleSubmit(processLogin)}
-							className='w-full flex flex-col justify-center items-start mb-2'>
-							<div className='w-full flex flex-col justify-center items-start gap-2 mb-3'>
-								<label
-									htmlFor='email'
-									className='text-sm text-black-600'>
-									Email
-								</label>
-								<div className='w-full flex flex-row gap-4 items-center border border-gray-300 rounded-xl p-3'>
-									<Mail className='w-5 h-5 text-gray-600' />
-									<input
-										className='w-full outline-none border-none'
-										type='email'
-										name='email'
-										id='email'
-										placeholder='email.@contoh.com'
-										{...register("email", { required: true })}
-									/>
-								</div>
-								{errors.email && <p className='text-red-600'>{errors.email.message}</p>}
-							</div>
+				{/* Tagline */}
+				<div className='flex flex-col justify-center my-auto text-white'>
+					<h1 className='text-3xl lg:text-5xl font-bold mb-4 lg:mb-8 leading-tight'>Belanja lebih mudah, hidup lebih praktis</h1>
+					<p className='text-base lg:text-lg text-white/90 leading-relaxed'>Ribuan produk pilihan dengan harga terbaik, pengiriman cepat, dan pembayaran yang aman.</p>
 
-							<div className='w-full flex flex-col justify-center items-start gap-2 mb-3'>
-								<div className='flex justify-between w-full'>
-									<label
-										className='flex justify-between text-sm text-black-600'
-										htmlFor='password'>
-										Kata Sandi
-									</label>
-									<span className='flex  text-sm text-gray-600'>
-										<Link to='/auth/forgot-password'>Lupa kata sandi?</Link>
-									</span>
-								</div>
-								<div className='w-full flex flex-row gap-4 items-center border border-gray-300 rounded-xl p-3'>
-									<Lock className='w-5 h-5 text-gray-600' />
-									<input
-										className='w-full outline-none border-none'
-										type={showPassword ? "text" : "password"}
-										name='password'
-										id='password'
-										placeholder='Masukan Kata Sandi'
-										{...register("password", { required: true })}
-									/>
-									<button
-										type='button'
-										onClick={toggleShowPassword}>
-										{showPassword ? <PiEyeBold className='w-5 h-5 text-gray-600' /> : <PiEyeClosed className='w-5 h-5 text-gray-600' />}
-									</button>
-								</div>
-								{errors.password && <p className='text-red-600'>{errors.password.message}</p>}
-							</div>
-							<div className='flex gap-2 items-start justify-center text-md font-md text-gray-600 ml-1 text-justify mb-8'>
+					{/* Stats */}
+					<div className='flex gap-8 lg:gap-10 mt-8 lg:mt-10'>
+						<div className='flex flex-col gap-1'>
+							<span className='text-xl lg:text-2xl font-bold'>10rb+</span>
+							<span className='text-sm lg:text-base text-white/80'>Produk</span>
+						</div>
+						<div className='flex flex-col gap-1'>
+							<span className='text-xl lg:text-2xl font-bold'>500rb+</span>
+							<span className='text-sm lg:text-base text-white/80'>Pelanggan</span>
+						</div>
+						<div className='flex flex-col gap-1'>
+							<span className='text-xl lg:text-2xl font-bold'>4.8★</span>
+							<span className='text-sm lg:text-base text-white/80'>Rating</span>
+						</div>
+					</div>
+				</div>
+
+				<p className='text-sm text-gray-300 mt-auto'>© 2026 BeliMudah. Seluruh hak cipta dilindungi.</p>
+			</div>
+
+			{/* ── Right panel: form ── */}
+			<div className='w-full lg:w-1/2 flex flex-col items-center justify-center px-5 py-10 sm:px-10 md:px-16 lg:px-20 xl:px-28'>
+				{/* Mobile-only logo */}
+				<div className='flex md:hidden items-center gap-2 mb-8 self-start'>
+					<img
+						src={Logo}
+						alt='Logo BeliMudah'
+						className='w-9 h-9'
+					/>
+					<span className='font-semibold text-blue-600 text-xl'>BeliMudah</span>
+				</div>
+
+				<div className='w-full max-w-md flex flex-col gap-4'>
+					{/* Heading */}
+					<div className='mb-2'>
+						<h2 className='text-3xl sm:text-4xl font-bold text-gray-900 mb-1'>Masuk Akun</h2>
+						<p className='text-sm sm:text-base text-gray-600'>
+							Belum punya akun?{" "}
+							<Link
+								className='ml-1 text-blue-600 font-medium hover:underline'
+								to='/auth/register'>
+								Daftar gratis
+							</Link>
+						</p>
+					</div>
+
+					{/* Social login */}
+					<div className='flex gap-3'>
+						<button
+							type='button'
+							className='flex-1 text-sm text-gray-600 rounded-xl border border-gray-300 py-2.5 hover:bg-gray-50 transition-colors'>
+							Google
+						</button>
+						<button
+							type='button'
+							className='flex-1 text-sm text-gray-600 rounded-xl border border-gray-300 py-2.5 hover:bg-gray-50 transition-colors'>
+							Facebook
+						</button>
+					</div>
+
+					{/* Divider */}
+					<div className='flex items-center gap-3'>
+						<div className='flex-1 h-px bg-gray-200' />
+						<span className='text-sm text-gray-400 whitespace-nowrap'>atau masuk dengan email</span>
+						<div className='flex-1 h-px bg-gray-200' />
+					</div>
+
+					{/* Form */}
+					<form
+						id='form-login'
+						onSubmit={handleSubmit(processLogin)}
+						className='flex flex-col gap-4'>
+						{/* Email */}
+						<div className='flex flex-col gap-1.5'>
+							<label
+								htmlFor='email'
+								className='text-sm font-medium text-gray-700'>
+								Email
+							</label>
+							<div className='flex items-center gap-3 border border-gray-300 rounded-xl px-3 py-2.5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all'>
+								<Mail className='w-4 h-4 text-gray-400 shrink-0' />
 								<input
-									className='cursor-pointer mt-2'
-									type='checkbox'
-									name=''
-									id=''
+									className='w-full outline-none border-none text-sm bg-transparent'
+									type='email'
+									id='email'
+									placeholder='email@contoh.com'
+									{...register("email", { required: true })}
 								/>
-								<label htmlFor=''>Ingat saya selama 30 hari</label>
 							</div>
-							<div className='w-full flex flex-row justify-center items-center bg-blue-600 rounded-lg p-3 hover:bg-blue-700 gap-3 cursor-pointer'>
-								<SquareArrowRightEnter className='w-5 h-5 text-white' />
+							{errors.email && <p className='text-xs text-red-500'>{errors.email.message}</p>}
+						</div>
+
+						{/* Password */}
+						<div className='flex flex-col gap-1.5'>
+							<div className='flex justify-between items-center'>
+								<label
+									htmlFor='password'
+									className='text-sm font-medium text-gray-700'>
+									Kata Sandi
+								</label>
+								<Link
+									to='/auth/forgot-password'
+									className='text-xs sm:text-sm text-blue-600 hover:underline'>
+									Lupa kata sandi?
+								</Link>
+							</div>
+							<div className='flex items-center gap-3 border border-gray-300 rounded-xl px-3 py-2.5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all'>
+								<Lock className='w-4 h-4 text-gray-400 shrink-0' />
+								<input
+									className='w-full outline-none border-none text-sm bg-transparent'
+									type={showPassword ? "text" : "password"}
+									id='password'
+									placeholder='Masukkan kata sandi'
+									{...register("password", { required: true })}
+								/>
 								<button
-									className='text-md text-white justify-center items-center font-md border-none cursor-pointer'
-									type='submit'>
-									Masuk
+									type='button'
+									onClick={toggleShowPassword}
+									className='shrink-0'>
+									{showPassword ? <PiEyeBold className='w-4 h-4 text-gray-400' /> : <PiEyeClosed className='w-4 h-4 text-gray-400' />}
 								</button>
 							</div>
-						</form>
-						<div className='flex justify-center items-center text-center text-md text-gray-500 mb-1 gap-2'>
-							<span className='font-bold flex justify-center items-center'>🔒</span>
-							<span>Login aman dengan enkripsi SSL 256-bitssss</span>
+							{errors.password && <p className='text-xs text-red-500'>{errors.password.message}</p>}
 						</div>
-						<div className='flex justify-center items-center text-center'>Dengan masuk, kamu menyetujui Syarat & Ketentuan dan Kebijakan Privasi kami.</div>
-					</div>
+
+						{/* Remember me */}
+						<label className='flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none'>
+							<input
+								type='checkbox'
+								className='rounded border-gray-300 cursor-pointer'
+							/>
+							Ingat saya selama 30 hari
+						</label>
+
+						{/* Submit */}
+						<button
+							type='submit'
+							className='w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl py-3 font-medium transition-colors'>
+							<SquareArrowRightEnter className='w-4 h-4' />
+							Masuk
+						</button>
+					</form>
+
+					{/* Footer notes */}
+					<p className='text-xs text-center text-gray-400 flex items-center justify-center gap-1.5'>
+						<span>🔒</span>
+						<span>Login aman dengan enkripsi SSL 256-bit</span>
+					</p>
+					<p className='text-xs text-center text-gray-400'>
+						Dengan masuk, kamu menyetujui <span className='text-blue-500 cursor-pointer hover:underline'>Syarat &amp; Ketentuan</span> dan <span className='text-blue-500 cursor-pointer hover:underline'>Kebijakan Privasi</span> kami.
+					</p>
 				</div>
 			</div>
-		</>
+		</div>
 	);
 }
 
