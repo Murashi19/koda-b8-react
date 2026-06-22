@@ -67,7 +67,7 @@ function Register() {
 					<img
 						src={Logo}
 						alt='Logo BeliMudah'
-						className='w-11 h-11 xl:w-12 xl:h-12'
+						className='w-13 h-13'
 					/>
 					<span className='font-semibold text-white text-xl xl:text-2xl whitespace-nowrap'>BeliMudah</span>
 				</div>
