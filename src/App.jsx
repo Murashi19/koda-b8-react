@@ -8,6 +8,11 @@ import CartContext from "./context/CartContext";
 import WishlistContext from "./context/WishlistContext";
 import ModalContext from "./context/ModalContext";
 
+// Redux
+import { Provider } from "react-redux";
+import { store, persistor } from "./redux/store";
+import { PersistGate } from "redux-persist/integration/react";
+
 import useLocalStorage from "./hooks/useLocalStorage";
 
 function App() {
@@ -140,15 +145,21 @@ function App() {
 	};
 
 	return (
-		<ModalContext.Provider value={{ modalVisible, showLoginModal, hideLoginModal, modalMessage }}>
-			<AuthContext.Provider value={{ auth, setAuth, updateAuth, placeOrder }}>
-				<CartContext.Provider value={{ cart, addToCart, removeFromCart, updateCartQty, isInCart, clearCart }}>
-					<WishlistContext.Provider value={{ wishlist, toggleWishlist, removeFromWishlist, isWishlisted, clearWishlist }}>
-						<RouterProvider router={router} />
-					</WishlistContext.Provider>
-				</CartContext.Provider>
-			</AuthContext.Provider>
-		</ModalContext.Provider>
+		<PersistGate
+			loading={null}
+			persistor={persistor}>
+			<Provider store={store}>
+				<ModalContext.Provider value={{ modalVisible, showLoginModal, hideLoginModal, modalMessage }}>
+					<AuthContext.Provider value={{ auth, setAuth, updateAuth, placeOrder }}>
+						<CartContext.Provider value={{ cart, addToCart, removeFromCart, updateCartQty, isInCart, clearCart }}>
+							<WishlistContext.Provider value={{ wishlist, toggleWishlist, removeFromWishlist, isWishlisted, clearWishlist }}>
+								<RouterProvider router={router} />
+							</WishlistContext.Provider>
+						</CartContext.Provider>
+					</AuthContext.Provider>
+				</ModalContext.Provider>
+			</Provider>
+		</PersistGate>
 	);
 }
 
