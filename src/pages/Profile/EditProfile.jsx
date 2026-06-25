@@ -52,7 +52,7 @@ export default function EditProfile() {
 				name: auth.name || "",
 				email: auth.email || "",
 				telepon: auth.telepon || "",
-				tanggalLahir: formatDate(auth.tanggalLahir) || "",
+				tanggalLahir: auth.tanggalLahir || "",
 				jenisKelamin: auth.jenisKelamin || "",
 			});
 		}
@@ -64,7 +64,7 @@ export default function EditProfile() {
 				name: data.name?.trim() || auth.name,
 				email: data.email?.trim() || auth.email,
 				telepon: data.telepon?.trim() || "",
-				tanggalLahir: data.tanggalLahir.toLocaleDateString("id-ID").replace(/\//g, "-") || "",
+				tanggalLahir: formatDate(data.tanggalLahir) || "",
 				jenisKelamin: data.jenisKelamin || "",
 			});
 
