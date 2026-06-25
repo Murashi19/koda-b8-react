@@ -1,7 +1,7 @@
-import { useEffect, useMemo } from "react";
+import { useMemo, useCallback } from "react";
+import { animateScroll } from "react-scroll";
 import { ChevronRight } from "lucide-react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-
 import ProductCard from "../ProductCard";
 import BrowseFilter from "../BrowseFilter";
 
@@ -15,30 +15,42 @@ export default function BrowseMain() {
 	const { slug } = useParams();
 	const [searchParams, setSearchParams] = useSearchParams();
 
-	// Baca semua filter dari URL
+	// URL State
 	const searchQuery = searchParams.get("q") ?? "";
 	const selectedBrands = searchParams.getAll("brand");
 	const selectedRating = Number(searchParams.get("rating")) || null;
 	const inStock = searchParams.get("stock") === "1";
 	const priceMax = Number(searchParams.get("priceMax")) || 20000000;
-	const currentPage = Number(searchParams.get("page")) || 1;
+	const page = Number(searchParams.get("page")) || 1;
 
-	// Set Filter
-	const setParam = (updates) => {
-		setSearchParams((prev) => {
-			const next = new URLSearchParams(prev);
-			Object.entries(updates).forEach(([key, value]) => {
-				if (value === null || value === undefined || value === "") {
-					next.delete(key);
-				} else {
-					next.set(key, value);
-				}
+	// Helper
+	const setParam = useCallback(
+		(updates) => {
+			setSearchParams((prev) => {
+				const next = new URLSearchParams(prev);
+
+				Object.entries(updates).forEach(([key, value]) => {
+					if (value === null || value === undefined || value === "") {
+						next.delete(key);
+					} else {
+						next.set(key, value);
+					}
+				});
+
+				return next;
 			});
-			return next;
-		});
-	};
+		},
+		[setSearchParams],
+	);
 
-	// brand pakai getAll jadi perlu helper khusus
+	// Event Handler
+	const changePage = (page) => {
+		animateScroll.scrollToTop({
+			duration: 700,
+			smooth: "easeInOutQuart",
+		});
+		setParam({ page });
+	};
 	const toggleBrand = (brand) => {
 		setSearchParams((prev) => {
 			const next = new URLSearchParams(prev);
@@ -51,37 +63,23 @@ export default function BrowseMain() {
 		});
 	};
 
-	// const setCurrentPage = (page) => {
-	// 	const val = typeof page === "function" ? page(currentPage) : page;
-	// 	setParam({ page: val });
-	// };
-
-	// Data
-	const brands = useMemo(() => [...new Set(products.map((p) => p.brand))], []);
-
+	// Derived Data
+	const brands = useMemo(() => [...new Set(products.map((product) => product.brand))], []);
 	const categoriesWithCount = useMemo(
 		() =>
 			category.map((cat) => ({
 				...cat,
-				totalProduct: products.filter((p) => p.category === cat.name).length,
+				totalProduct: products.filter((product) => product.category === cat.name).length,
 			})),
 		[],
 	);
-
 	const selectedCategory = categoriesWithCount.find((cat) => cat.slug === slug);
 
+	// Custom Hooks
 	const { filteredProducts } = useProductFilter(products, selectedCategory?.name, searchQuery, selectedBrands, selectedRating, inStock, priceMax);
+	const { displayedData, currentPage, totalPages, hasNextPage, hasPrevPage } = usePagination(filteredProducts, page, 16);
 
-	const { totalPages, displayedData, setCurrentPage } = usePagination(filteredProducts, 16, currentPage);
-	useEffect(() => {
-		setCurrentPage(1);
-	}, [filteredProducts, setCurrentPage]);
-
-	// Reset ke page 1 kalau filter berubah (kecuali page itu sendiri)
-	useEffect(() => {
-		setParam({ page: "1" });
-	}, [slug, searchQuery]);
-
+	// Early Return
 	if (slug && !selectedCategory) {
 		return (
 			<div className='max-w-7xl mx-auto py-20 text-center'>
@@ -90,7 +88,8 @@ export default function BrowseMain() {
 		);
 	}
 
-	const pageTitle = searchQuery ? `Hasil pencarian untuk "${searchQuery}"` : slug ? selectedCategory?.name : "Semua Produk";
+	// Derived Value
+	const pageTitle = searchQuery ? `Hasil pencarian untuk "${searchQuery}"` : slug ? selectedCategory.name : "Semua Produk";
 
 	return (
 		<main className='max-w-7xl mx-auto px-4 mb-12'>
@@ -117,7 +116,6 @@ export default function BrowseMain() {
 					onStockChange={() => setParam({ stock: inStock ? null : "1", page: "1" })}
 					priceMax={priceMax}
 					onPriceChange={(val) => setParam({ priceMax: val === 20000000 ? null : val, page: "1" })}
-					setCurrentPage={setCurrentPage}
 				/>
 
 				<div className='flex-1'>
@@ -141,23 +139,23 @@ export default function BrowseMain() {
 					{totalPages > 1 && (
 						<div className='flex justify-center items-center gap-2 mt-8 flex-wrap'>
 							<button
-								onClick={() => setCurrentPage((p) => p - 1)}
-								disabled={currentPage === 1}
-								className='px-4 py-2 border rounded-lg disabled:opacity-50'>
+								onClick={() => changePage(currentPage - 1)}
+								disabled={!hasPrevPage}
+								className='px-4 py-2 border rounded-lg disabled:opacity-50 cursor-pointer'>
 								Prev
 							</button>
 							{Array.from({ length: totalPages }, (_, i) => (
 								<button
 									key={i}
-									onClick={() => setCurrentPage(i + 1)}
-									className={`px-4 py-2 border rounded-lg ${currentPage === i + 1 ? "bg-blue-500 text-white border-blue-500" : "bg-white"}`}>
+									onClick={() => changePage(i + 1)}
+									className={`px-4 py-2 border rounded-lg ${currentPage === i + 1 ? "bg-blue-500 text-white border-blue-500" : "bg-white"} cursor-pointer`}>
 									{i + 1}
 								</button>
 							))}
 							<button
-								onClick={() => setCurrentPage((p) => p + 1)}
-								disabled={currentPage === totalPages}
-								className='px-4 py-2 border rounded-lg disabled:opacity-50'>
+								onClick={() => changePage(currentPage + 1)}
+								disabled={!hasNextPage}
+								className='px-4 py-2 border rounded-lg disabled:opacity-50 cursor-pointer'>
 								Next
 							</button>
 						</div>
