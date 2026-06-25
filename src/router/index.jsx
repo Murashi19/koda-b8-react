@@ -34,10 +34,12 @@ import AdminDashboard from "../pages/Admin/Dashboard";
 import ProductList from "../pages/Admin/ProductList";
 import OrderList from "../pages/Admin/OrderList";
 import CustomerList from "../pages/Admin/Customers";
+import ErrorPage from "../pages/ErrorPage";
 
 export const router = createBrowserRouter([
 	{
 		element: <RootLayout />,
+		errorElement: <ErrorPage />,
 		children: [
 			// Public
 			{ path: "/", element: <LandingPage /> },
@@ -79,6 +81,11 @@ export const router = createBrowserRouter([
 					{ path: "/admin/order-list", element: <OrderList /> },
 					{ path: "/admin/customers", element: <CustomerList /> },
 				],
+			},
+			// 404
+			{
+				path: "*",
+				element: <ErrorPage />,
 			},
 		],
 	},
