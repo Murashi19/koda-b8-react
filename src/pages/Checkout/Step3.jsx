@@ -1,8 +1,8 @@
 import { useContext } from "react";
 import { CheckCircle, Shield, Lock } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
+import AuthContext from "../../context/AuthContext";
 import CartContext from "../../context/CartContext";
-import useLocalStorage from "../../hooks/useLocalStorage";
 
 const shippingLabels = {
 	"jne-reg": "JNE Reguler · 3-5 hari kerja",
@@ -21,21 +21,20 @@ const paymentLabels = {
 
 const formatRp = (n) => "Rp " + n.toLocaleString("id-ID").replace(/\./g, ".");
 const parsePrice = (priceStr) => Number(String(priceStr).replace(/[^0-9]/g, ""));
-
 const formatDate = (date) => date.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 
 export default function CheckoutStep3() {
 	const navigate = useNavigate();
 	const { checkoutData } = useOutletContext();
-	const { cart, clearCart } = useContext(CartContext);
-	const [, saveOrder] = useLocalStorage("orders");
+	const { placeOrder } = useContext(AuthContext);
+	const { cart } = useContext(CartContext);
 
 	const { shipping, shippingMethod, paymentMethod } = checkoutData;
 
 	const total = cart.reduce((sum, item) => sum + parsePrice(item.discountPrice) * item.qty, 0);
 
 	const handlePay = () => {
-		const newOrder = {
+		const order = placeOrder({
 			id: "BM" + new Date().getTime(),
 			date: formatDate(new Date()),
 			status: "Diproses",
@@ -46,15 +45,16 @@ export default function CheckoutStep3() {
 				price: item.discountPrice,
 			})),
 			total: formatRp(total),
+			totalRaw: total,
 			canReview: false,
 			shipping,
 			shippingMethod,
 			paymentMethod,
-		};
+		});
 
-		saveOrder(newOrder);
-		clearCart();
-		navigate("/success");
+		if (order) {
+			navigate(`/success`);
+		}
 	};
 
 	return (
