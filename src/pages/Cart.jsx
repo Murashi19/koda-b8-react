@@ -8,6 +8,7 @@ import { products } from "../data/products.js";
 // Context
 import CartContext from "../context/CartContext";
 import WishlistContext from "../context/WishlistContext";
+import AuthContext from "../context/AuthContext";
 
 // Components
 import Header from "../components/Header";
@@ -20,8 +21,9 @@ export default function Cart() {
 	const navigate = useNavigate();
 	const [voucher, setVoucher] = useState("");
 
+	const { auth, updateAuth } = useContext(AuthContext);
 	const { cart, updateCartQty, removeFromCart } = useContext(CartContext);
-	const { toggleWishlist, isWishlisted } = useContext(WishlistContext);
+	const { isWishlisted } = useContext(WishlistContext);
 
 	const parsePrice = (priceStr) => Number(String(priceStr).replace(/[^0-9]/g, ""));
 	const formatRp = (n) => "Rp " + n.toLocaleString("id-ID").replace(/\./g, ".");
@@ -30,8 +32,15 @@ export default function Cart() {
 	const subtotal = cart.reduce((sum, item) => sum + parsePrice(item.discountPrice) * item.qty, 0);
 
 	const handleSaveToWishlist = (item) => {
-		toggleWishlist(item);
-		removeFromCart(item.id);
+		if (!auth) return;
+		const currentWishlist = auth.wishlist ?? [];
+		const currentCart = auth.cart ?? [];
+
+		const alreadyWishlisted = currentWishlist.some((w) => w.id === item.id);
+		const newWishlist = alreadyWishlisted ? currentWishlist : [...currentWishlist, item];
+		const newCart = currentCart.filter((c) => c.id !== item.id);
+
+		updateAuth({ wishlist: newWishlist, cart: newCart });
 	};
 
 	const relatedProducts = products.slice(0, 4);
