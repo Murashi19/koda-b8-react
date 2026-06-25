@@ -1,4 +1,4 @@
-import { useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
@@ -6,28 +6,24 @@ import { editProfileSchema } from "../../services/validations/editProfileSchema"
 
 import AuthContext from "../../context/AuthContext";
 
-import useLocalStorage from "../../hooks/useLocalStorage";
-
 import { Camera } from "lucide-react";
 
 // Components
 import Header from "../../components/Header";
 import ButtonMessage from "../../components/ButtonMessage";
 import Footer from "../../components/Footer";
-import ProfileSidebar from "../../components/ProfileSidebar";
+import ProfileSidebar from "../../components/Profile/ProfileSidebar";
 
 const inputClass = "w-full rounded-lg border border-black/10 bg-gray-100 px-3 py-2 text-sm font-normal text-gray-900 outline-none focus:border-[#1a73e8] transition-colors";
-
 const labelClass = "text-sm font-medium text-gray-900";
 
-// Main Page
 export default function EditProfile() {
-	const { auth, setAuth } = useContext(AuthContext);
-	const [users, , updateUsers] = useLocalStorage("users");
+	const { auth, updateAuth } = useContext(AuthContext);
 
-	// Cari data user yang sedang login langsung dari "users" (sumber data utama),
-	// bukan dari auth, supaya form selalu menampilkan data ter-update di "users"
-	const currentUser = users.find((user) => user.email === auth?.email);
+	const [notification, setNotification] = useState({
+		type: "",
+		message: "",
+	});
 
 	const {
 		register,
@@ -37,59 +33,69 @@ export default function EditProfile() {
 	} = useForm({
 		resolver: yupResolver(editProfileSchema),
 	});
+	const formatDate = (dateString) => {
+		if (!dateString) return "";
+		const d = new Date(dateString);
+		if (isNaN(d.getTime())) return ""; // Mencegah error jika data tanggal tidak valid
 
+		const thn = d.getFullYear();
+		const bln = String(d.getMonth() + 1).padStart(2, "0");
+		const tgl = String(d.getDate()).padStart(2, "0");
+
+		return `${thn}-${bln}-${tgl}`; // Menghasilkan yyyy-mm-dd
+	};
+
+	// Isi form dari data auth yang sedang login
 	useEffect(() => {
-		if (currentUser) {
+		if (auth) {
 			reset({
-				name: currentUser.name || "",
-				email: currentUser.email || "",
-				telepon: currentUser.telepon || "",
-				tanggalLahir: currentUser.tanggalLahir || "",
-				jenisKelamin: currentUser.jenisKelamin || "",
+				name: auth.name || "",
+				email: auth.email || "",
+				telepon: auth.telepon || "",
+				tanggalLahir: formatDate(auth.tanggalLahir) || "",
+				jenisKelamin: auth.jenisKelamin || "",
 			});
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [auth?.email, reset]);
+	}, [auth, auth.email, reset]);
 
 	const handleSave = (data) => {
 		try {
-			const profileData = {
-				name: data.name?.trim() || currentUser.name,
-				email: data.email?.trim() || currentUser.email,
-				telepon: data.telepon?.trim(),
-				tanggalLahir: data.tanggalLahir,
-				jenisKelamin: data.jenisKelamin,
-			};
-
-			// Satu-satunya sumber data: key "users". Tidak ada key "profile" terpisah.
-			const updatedUsers = users.map((user) => {
-				if (user.email === currentUser.email) {
-					return {
-						...user,
-						...profileData,
-					};
-				}
-
-				return user;
+			updateAuth({
+				name: data.name?.trim() || auth.name,
+				email: data.email?.trim() || auth.email,
+				telepon: data.telepon?.trim() || "",
+				tanggalLahir: data.tanggalLahir.toLocaleDateString("id-ID").replace(/\//g, "-") || "",
+				jenisKelamin: data.jenisKelamin || "",
 			});
 
-			updateUsers(updatedUsers);
-
-			const updatedUser = {
-				...currentUser,
-				...profileData,
-			};
-
-			setAuth(updatedUser);
-
-			alert("Profile berhasil diperbarui");
+			// alert("Profile berhasil diperbarui");
+			setNotification({
+				type: "success",
+				message: "Profile berhasil diperbarui",
+			});
 		} catch (error) {
 			console.error(error);
-			alert("Gagal memperbarui profile");
+			// alert("Gagal memperbarui profile");
+			setNotification({
+				type: "error",
+				message: `${error} = Gagal memperbarui profile`,
+			});
 		}
 	};
+	useEffect(() => {
+		if (!notification.message) return;
 
-	const character = currentUser?.name?.charAt(0).toUpperCase();
+		const timer = setTimeout(() => {
+			setNotification({
+				type: "",
+				message: "",
+			});
+		}, 3000);
+
+		return () => clearTimeout(timer);
+	}, [notification]);
+
+	const character = auth?.name?.charAt(0).toUpperCase();
 
 	return (
 		<>
@@ -97,10 +103,8 @@ export default function EditProfile() {
 			<ButtonMessage />
 			<main className='min-h-screen max-w-[1728px] mx-auto'>
 				<div className='max-w-6xl mx-auto grid grid-cols-4 gap-8 px-4 py-8'>
-					{/* ── Left: Sidebar ── */}
 					<ProfileSidebar activeNav='settings' />
 
-					{/* ── Right: Edit Profile ── */}
 					<div className='col-span-3 flex flex-col gap-4 bg-white border border-black/10 rounded-2xl p-5'>
 						{/* Heading */}
 						<div className='flex items-center justify-between gap-4'>
@@ -112,13 +116,14 @@ export default function EditProfile() {
 								Simpan
 							</button>
 						</div>
+						{notification.message && <div className={`mb-5 rounded-lg p-3 text-sm font-medium ${notification.type === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{notification.message}</div>}
 
-						{/* Form card */}
+						{/* Form */}
 						<form
 							id='edit-profile-form'
 							onSubmit={handleSubmit(handleSave)}
 							className='w-full flex flex-col gap-4 bg-white border border-black/10 rounded-2xl p-6'>
-							{/* Avatar upload */}
+							{/* Avatar */}
 							<div className='flex items-center gap-4'>
 								<div className='w-20 h-20 rounded-full bg-blue-600/10 flex items-center justify-center text-2xl font-bold text-[#1a73e8] shrink-0'>{character}</div>
 								<label
@@ -139,12 +144,10 @@ export default function EditProfile() {
 								/>
 							</div>
 
-							{/* Form fields */}
 							<div className='flex flex-col gap-1.5'>
 								<label className={labelClass}>Nama Lengkap</label>
 								<input
 									type='text'
-									name='name'
 									placeholder='Budi Santoso'
 									className={inputClass}
 									{...register("name")}
@@ -156,7 +159,6 @@ export default function EditProfile() {
 								<label className={labelClass}>Email</label>
 								<input
 									type='email'
-									name='email'
 									placeholder='budi@email.com'
 									className={inputClass}
 									{...register("email")}
@@ -168,7 +170,6 @@ export default function EditProfile() {
 								<label className={labelClass}>Nomor Telepon</label>
 								<input
 									type='tel'
-									name='telepon'
 									placeholder='0812-3456-7890'
 									className={inputClass}
 									{...register("telepon")}
@@ -180,7 +181,6 @@ export default function EditProfile() {
 								<label className={labelClass}>Tanggal Lahir</label>
 								<input
 									type='date'
-									name='tanggalLahir'
 									className={inputClass}
 									{...register("tanggalLahir")}
 								/>
@@ -190,7 +190,6 @@ export default function EditProfile() {
 							<div className='flex flex-col gap-1.5'>
 								<label className={labelClass}>Jenis Kelamin</label>
 								<select
-									name='jenisKelamin'
 									{...register("jenisKelamin")}
 									className={inputClass}>
 									<option value=''>Pilih jenis kelamin</option>
