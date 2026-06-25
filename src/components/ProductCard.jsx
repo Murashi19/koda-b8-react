@@ -60,7 +60,7 @@ export default function ProductCard({ product }) {
 				<button
 					type='button'
 					onClick={handleAddToCart}
-					className='mt-1 flex items-center justify-center gap-2 w-full h-9 rounded-lg bg-[#1a73e8] text-white text-sm font-medium hover:bg-[#1558b0] transition-colors'>
+					className='mt-1 flex items-center justify-center gap-2 w-full h-9 rounded-lg bg-[#1a73e8] text-white text-sm font-medium hover:bg-[#1558b0] transition-colors cursor-pointer'>
 					<ShoppingCart
 						className='w-4 h-4'
 						strokeWidth={1.5}
