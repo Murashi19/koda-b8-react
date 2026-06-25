@@ -1,4 +1,4 @@
-import StarRating from "./RatingBrowse";
+import StarRating from "./StarsRate";
 
 const ratingOptions = [5, 4, 3];
 
@@ -57,7 +57,10 @@ export default function BrowseFilter({ brands, selectedBrands, onBrandChange, se
 								checked={selectedRating === rating}
 								onChange={() => onRatingChange(rating)}
 							/>
-							<StarRating rating={rating} />
+							<StarRating
+								className='w-3.5 h-3.5'
+								rating={rating}
+							/>
 							<span>Ke bawah</span>
 						</label>
 					))}
