@@ -6,8 +6,15 @@ export default function useLocalStorage(key) {
         return stored ? JSON.parse(stored) : [];
     });
 
+    const refresh = () => {
+        const stored = JSON.parse(localStorage.getItem(key) || "[]");
+        setData(stored);
+        return stored;
+    };
+
     const saveData = (newData) => {
-        const updated = [...data, newData];
+        const current = refresh();
+        const updated = [...current, newData];
 
         localStorage.setItem(key, JSON.stringify(updated));
         setData(updated);
@@ -18,5 +25,24 @@ export default function useLocalStorage(key) {
         setData(newData);
     };
 
-    return [data, saveData, updateData];
+    const updateUserById = (updatedUser) => {
+        const users = JSON.parse(localStorage.getItem(key) || "[]");
+
+        const updated = users.map((user) =>
+            user.id === updatedUser.id ? updatedUser : user
+        );
+
+        localStorage.setItem(key, JSON.stringify(updated));
+        setData(updated);
+
+        return updatedUser;
+    };
+
+    return {
+        data,
+        saveData,
+        updateData,
+        updateUserById,
+        refresh,
+    };
 }
