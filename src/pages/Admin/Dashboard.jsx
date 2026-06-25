@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
@@ -7,7 +6,11 @@ import Sidebar from "../../components/Admin/Sidebar";
 import Header from "../../components/Admin/Header";
 
 // Static Data
-import { stats, revenueData } from "../../data/Admin/staticData";
+import { stats } from "../../data/Admin/staticData";
+
+// redux
+import { useDispatch, useSelector } from "react-redux";
+import { toggleSidebar } from "../../redux/reducers/dashboard";
 
 const recentOrders = [
 	{ id: "#BM98765432", name: "Budi Santoso", date: "28 Mei 2026", price: "Rp 900.000" },
@@ -43,8 +46,9 @@ const ChartTooltip = ({ active, payload, label }) => {
 
 export default function AdminDashboard() {
 	const navigate = useNavigate();
-	const [sidebarOpen, setSidebarOpen] = useState(true);
-
+	const dispatch = useDispatch();
+	const { sidebarOpen, revenueData } = useSelector((state) => state.dashboard);
+	console.log(sidebarOpen);
 	return (
 		<div className='flex min-h-screen bg-[#f8fafc] font-sans text-[#1e293b]'>
 			{/* Sidebar */}
@@ -53,7 +57,7 @@ export default function AdminDashboard() {
 			{/* Main */}
 			<div className='flex flex-col flex-1 min-w-0'>
 				<Header
-					onToggleSidebar={() => setSidebarOpen((v) => !v)}
+					onToggleSidebar={() => dispatch(toggleSidebar())}
 					onSearch={(query) => console.log("search:", query)}
 				/>
 
