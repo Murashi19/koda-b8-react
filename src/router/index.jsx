@@ -5,7 +5,7 @@ import { createBrowserRouter } from "react-router-dom";
 import RootLayout from "../layouts/RootLayout";
 
 // Guards
-import { ProtectedRoute, AdminRoute } from "./guards";
+import { ProtectedRoute, AdminRoute } from "./Guards";
 
 // Auth
 import Register from "../pages/Auth/Register";
