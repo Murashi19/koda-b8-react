@@ -1,10 +1,17 @@
+// reducers/index.js
 import { combineReducers } from "@reduxjs/toolkit";
 import persistReducer from "redux-persist/es/persistReducer";
-import storage from "redux-persist/es/storage"
+import storage from "redux-persist/es/storage";
 
-import orders from "./orders.js"
+import orders from "./orders.js";
 import products from "./products.js";
 import dashboard from "./dashboard.js";
+
+const rootReducer = combineReducers({
+    orders,
+    products,
+    dashboard,
+});
 
 const persistConfig = {
     key: "admin",
@@ -12,10 +19,4 @@ const persistConfig = {
     whitelist: ["dashboard"],
 };
 
-const reducer = combineReducers({
-    orders: persistReducer(persistConfig, orders),
-    products: persistReducer(persistConfig, products),
-    dashboard: persistReducer(persistConfig, dashboard),
-})
-
-export default reducer;
+export default persistReducer(persistConfig, rootReducer);
