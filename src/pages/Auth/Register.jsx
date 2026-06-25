@@ -48,6 +48,8 @@ function Register() {
 			wishlist: [],
 			orders: [],
 			isLogin: false,
+			role: "user",
+			// role: "admin",
 		};
 		saveData(newUser);
 
