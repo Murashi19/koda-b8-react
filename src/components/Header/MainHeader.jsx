@@ -1,8 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Bell, User, ShoppingCart, Heart, TextAlignJustify } from "lucide-react";
-import { useState, useEffect, useContext } from "react";
-
-import useLocalStorage from "../../hooks/useLocalStorage";
+import { Search, Bell, User, ShoppingCart, Heart, TextAlignJustify, ChevronDown } from "lucide-react";
+import { useState, useEffect, useContext, useRef } from "react";
 
 import AuthContext from "../../context/AuthContext";
 import CartContext from "../../context/CartContext";
@@ -12,18 +10,32 @@ import LogoHeader from "../../assets/logo-header.png";
 
 function MainHeader() {
 	const [query, setQuery] = useState("");
+	const [dropdownOpen, setDropdownOpen] = useState(false);
+	const dropdownRef = useRef(null);
 	const navigate = useNavigate();
 
 	const { auth } = useContext(AuthContext);
 	const { cart } = useContext(CartContext);
 	const { wishlist } = useContext(WishlistContext);
-	const [users] = useLocalStorage("users");
+
+	const isLoggedIn = auth && auth.isLogin;
+
+	// Close dropdown when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (e) => {
+			if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+				setDropdownOpen(false);
+			}
+		};
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, []);
 
 	useEffect(() => {
-		if (users.length === 0) {
+		if (!isLoggedIn) {
 			navigate("/auth/login");
 		}
-	}, [auth, navigate, users]);
+	}, [isLoggedIn, navigate]);
 
 	const handleSearch = (e) => {
 		e.preventDefault();
@@ -80,13 +92,68 @@ function MainHeader() {
 						<Bell className='w-5 h-5' />
 					</button>
 
-					{/* User */}
-					<button
-						onClick={() => navigate("/profile/edit-profile")}
-						className='flex items-center gap-2 hover:text-blue-600 transition-colors cursor-pointer'>
-						<User className='w-5 h-5' />
-						<span id='user-name'>{auth?.name}</span>
-					</button>
+					{/* User — kondisional */}
+					{isLoggedIn ? (
+						<button
+							onClick={() => navigate("/profile/edit-profile")}
+							className='flex items-center gap-2 hover:text-blue-600 transition-colors cursor-pointer'>
+							<User className='w-5 h-5' />
+							<span id='user-name'>{auth?.name}</span>
+						</button>
+					) : (
+						<div
+							ref={dropdownRef}
+							className='relative'>
+							<button
+								onClick={() => setDropdownOpen((prev) => !prev)}
+								className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border transition-all duration-200 cursor-pointer
+                ${dropdownOpen ? "bg-blue-50  text-blue-600" : "border-gray-200 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"}`}>
+								<div className='w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center'>
+									<User className='w-4 h-4 text-gray-500' />
+								</div>
+								<span className='text-sm font-medium hidden lg:block'>Akun</span>
+								<ChevronDown className={`w-4 h-4 transition-transform duration-200 ${dropdownOpen ? "rotate-180 text-blue-600" : "text-gray-400"}`} />
+							</button>
+
+							{dropdownOpen && (
+								<div className='absolute right-0 mt-2 w-52 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150'>
+									{/* Login */}
+									<div className='p-2'>
+										<button
+											onClick={() => {
+												navigate("/auth/login");
+												setDropdownOpen(false);
+											}}
+											className='w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 transition-colors cursor-pointer'>
+											<User className='w-4 h-4' />
+											Masuk
+										</button>
+									</div>
+
+									<div className='px-4 pb-1'>
+										<div className='flex items-center gap-2'>
+											<hr className='flex-1 border-gray-100' />
+											<span className='text-[11px] text-gray-400'>atau</span>
+											<hr className='flex-1 border-gray-100' />
+										</div>
+									</div>
+
+									{/* Register */}
+									<div className='px-2 pb-2'>
+										<button
+											onClick={() => {
+												navigate("/auth/register");
+												setDropdownOpen(false);
+											}}
+											className='w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors cursor-pointer'>
+											<span className='w-4 h-4 flex items-center justify-center rounded-full border border-blue-400 text-[10px] font-bold'>+</span>
+											Daftar Sekarang
+										</button>
+									</div>
+								</div>
+							)}
+						</div>
+					)}
 
 					{/* Wishlist */}
 					<button
