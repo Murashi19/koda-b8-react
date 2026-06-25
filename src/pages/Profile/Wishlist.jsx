@@ -11,6 +11,7 @@ import ProfileSidebar from "../../components/Profile/ProfileSidebar";
 
 // Context
 import WishlistContext from "../../context/WishlistContext";
+import { animateScroll } from "react-scroll";
 
 const ITEMS_PER_PAGE = 6; // kelipatan 3 biar grid cols-3 nya rapi
 
@@ -27,6 +28,12 @@ export default function Wishlist() {
 			setCurrentPage(totalPages);
 		}
 	}, [currentPage, totalPages]);
+	useEffect(() => {
+		animateScroll.scrollToTop({
+			duration: 700,
+			smooth: "easeInOutQuart",
+		});
+	}, [currentPage]);
 
 	return (
 		<>
