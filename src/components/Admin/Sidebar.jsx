@@ -5,12 +5,12 @@ import { MdExitToApp } from "react-icons/md";
 
 import { navItems } from "../../data/Admin/NavItemss";
 
-export default function Sidebar() {
+export default function Sidebar({ className }) {
 	const navigate = useNavigate();
 	const location = useLocation();
 
 	return (
-		<aside className='w-64 bg-[#07122a] text-white flex flex-col transition-all duration-300 shrink-0'>
+		<aside className={className}>
 			{/* Logo */}
 			<div className='flex items-center gap-3 px-6 py-6 border-b border-white/10'>
 				<div className='w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center font-bold text-white text-sm'>B</div>
