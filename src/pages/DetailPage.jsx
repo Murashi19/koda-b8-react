@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { ChevronRight, ShoppingCart, Heart, Truck, Shield, RefreshCw } from "lucide-react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 
@@ -41,6 +41,13 @@ export default function DetailPage() {
 	const [quantity, setQuantity] = useState(1);
 	const [activeTab, setActiveTab] = useState("Deskripsi");
 	const [selectedImg, setSelectedImg] = useState(product?.image);
+
+	useEffect(() => {
+		window.scrollTo({
+			top: 0,
+			behavior: "smooth",
+		});
+	}, [id]);
 
 	// Produk tidak ditemukan (id tidak valid / tidak ada di data)
 	if (!product) {
@@ -223,8 +230,8 @@ export default function DetailPage() {
 							<button
 								type='button'
 								onClick={() => {
-									handleAddToCart();
-									navigate("/cart");
+									const success = addToCart(product, quantity);
+									if (success) navigate("/cart");
 								}}
 								disabled={product.stock === 0}
 								className='w-67 h-14 rounded-xl bg-orange-500 border-2 border-orange-500 text-white text-base font-medium hover:bg-white hover:text-orange-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed'>
