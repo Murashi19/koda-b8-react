@@ -4,12 +4,15 @@ import StatusBadge from "./StatusBadgeOrder";
 
 export default function OrderCard({ order }) {
 	const navigate = useNavigate();
+
+	const displayId = order.orderId ?? order.id;
+
 	return (
 		<div className='w-full flex flex-col gap-4 rounded-2xl border border-black/10 bg-white p-5'>
 			{/* Header */}
 			<div className='flex justify-between items-start'>
 				<div className='flex flex-col gap-0.5'>
-					<h3 className='text-base font-medium text-gray-900'>#{order.id}</h3>
+					<h3 className='text-base font-medium text-gray-900'>#{displayId}</h3>
 					<span className='text-xs text-gray-500'>{order.date}</span>
 				</div>
 				<StatusBadge status={order.status} />
@@ -42,13 +45,13 @@ export default function OrderCard({ order }) {
 				</div>
 				<div className='flex items-center gap-3'>
 					<button
-						onClick={() => navigate(`/track/${order.id}`)}
+						onClick={() => navigate(`#`)} ///track/${displayId}
 						className='text-sm text-[#1a73e8] border border-[#1a73e8] rounded-lg px-3 py-1.5 hover:bg-blue-50 transition-colors'>
 						Lacak
 					</button>
 					{order.canReview && (
 						<button
-							onClick={() => navigate(`/review/${order.id}`)}
+							onClick={() => navigate(`#`)} ///review/${displayId}
 							className='flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg px-3 py-1.5 transition-colors'>
 							<Star
 								className='w-3 h-3'
