@@ -13,33 +13,74 @@ import category from "../../data/category";
 
 export default function BrowseMain() {
 	const { slug } = useParams();
-	const [searchParams] = useSearchParams();
-	const searchQuery = searchParams.get("q") ?? "";
+	const [searchParams, setSearchParams] = useSearchParams();
 
+	// Baca semua filter dari URL
+	const searchQuery = searchParams.get("q") ?? "";
+	const selectedBrands = searchParams.getAll("brand");
+	const selectedRating = Number(searchParams.get("rating")) || null;
+	const inStock = searchParams.get("stock") === "1";
+	const priceMax = Number(searchParams.get("priceMax")) || 20000000;
+	const currentPage = Number(searchParams.get("page")) || 1;
+
+	// Set Filter
+	const setParam = (updates) => {
+		setSearchParams((prev) => {
+			const next = new URLSearchParams(prev);
+			Object.entries(updates).forEach(([key, value]) => {
+				if (value === null || value === undefined || value === "") {
+					next.delete(key);
+				} else {
+					next.set(key, value);
+				}
+			});
+			return next;
+		});
+	};
+
+	// brand pakai getAll jadi perlu helper khusus
+	const toggleBrand = (brand) => {
+		setSearchParams((prev) => {
+			const next = new URLSearchParams(prev);
+			const current = next.getAll("brand");
+			next.delete("brand");
+			const updated = current.includes(brand) ? current.filter((b) => b !== brand) : [...current, brand];
+			updated.forEach((b) => next.append("brand", b));
+			next.set("page", "1");
+			return next;
+		});
+	};
+
+	// const setCurrentPage = (page) => {
+	// 	const val = typeof page === "function" ? page(currentPage) : page;
+	// 	setParam({ page: val });
+	// };
+
+	// Data
 	const brands = useMemo(() => [...new Set(products.map((p) => p.brand))], []);
 
 	const categoriesWithCount = useMemo(
 		() =>
 			category.map((cat) => ({
 				...cat,
-				totalProduct: products.filter((product) => product.category === cat.name).length,
+				totalProduct: products.filter((p) => p.category === cat.name).length,
 			})),
 		[],
 	);
 
 	const selectedCategory = categoriesWithCount.find((cat) => cat.slug === slug);
 
-	const { filteredProducts, selectedBrands, setSelectedBrands, selectedRating, setSelectedRating, inStock, setInStock, priceMax, setPriceMax } = useProductFilter(products, selectedCategory?.name, searchQuery);
+	const { filteredProducts } = useProductFilter(products, selectedCategory?.name, searchQuery, selectedBrands, selectedRating, inStock, priceMax);
 
-	const { currentPage, setCurrentPage, totalPages, displayedData } = usePagination(filteredProducts, 16);
-
+	const { totalPages, displayedData, setCurrentPage } = usePagination(filteredProducts, 16, currentPage);
 	useEffect(() => {
 		setCurrentPage(1);
-	}, [slug, searchQuery, selectedBrands, selectedRating, inStock, priceMax, setCurrentPage]);
+	}, [filteredProducts, setCurrentPage]);
 
-	const toggleBrand = (brand) => {
-		setSelectedBrands((prev) => (prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]));
-	};
+	// Reset ke page 1 kalau filter berubah (kecuali page itu sendiri)
+	useEffect(() => {
+		setParam({ page: "1" });
+	}, [slug, searchQuery]);
 
 	if (slug && !selectedCategory) {
 		return (
@@ -49,7 +90,6 @@ export default function BrowseMain() {
 		);
 	}
 
-	// Judul halaman: prioritaskan search query, lalu kategori, lalu default
 	const pageTitle = searchQuery ? `Hasil pencarian untuk "${searchQuery}"` : slug ? selectedCategory?.name : "Semua Produk";
 
 	return (
@@ -60,9 +100,7 @@ export default function BrowseMain() {
 					className='text-gray-600 hover:text-gray-900'>
 					Beranda
 				</Link>
-
 				<ChevronRight className='w-4 h-4' />
-
 				<span>{searchQuery ? "Hasil Pencarian" : slug ? selectedCategory?.name : "Semua Produk"}</span>
 			</nav>
 
@@ -74,11 +112,11 @@ export default function BrowseMain() {
 					selectedBrands={selectedBrands}
 					onBrandChange={toggleBrand}
 					selectedRating={selectedRating}
-					onRatingChange={setSelectedRating}
+					onRatingChange={(val) => setParam({ rating: val === selectedRating ? null : val, page: "1" })}
 					inStock={inStock}
-					onStockChange={setInStock}
+					onStockChange={() => setParam({ stock: inStock ? null : "1", page: "1" })}
 					priceMax={priceMax}
-					onPriceChange={setPriceMax}
+					onPriceChange={(val) => setParam({ priceMax: val === 20000000 ? null : val, page: "1" })}
 					setCurrentPage={setCurrentPage}
 				/>
 
@@ -103,23 +141,21 @@ export default function BrowseMain() {
 					{totalPages > 1 && (
 						<div className='flex justify-center items-center gap-2 mt-8 flex-wrap'>
 							<button
-								onClick={() => setCurrentPage((prev) => prev - 1)}
+								onClick={() => setCurrentPage((p) => p - 1)}
 								disabled={currentPage === 1}
 								className='px-4 py-2 border rounded-lg disabled:opacity-50'>
 								Prev
 							</button>
-
-							{Array.from({ length: totalPages }, (_, index) => (
+							{Array.from({ length: totalPages }, (_, i) => (
 								<button
-									key={index}
-									onClick={() => setCurrentPage(index + 1)}
-									className={`px-4 py-2 border rounded-lg ${currentPage === index + 1 ? "bg-blue-500 text-white border-blue-500" : "bg-white"}`}>
-									{index + 1}
+									key={i}
+									onClick={() => setCurrentPage(i + 1)}
+									className={`px-4 py-2 border rounded-lg ${currentPage === i + 1 ? "bg-blue-500 text-white border-blue-500" : "bg-white"}`}>
+									{i + 1}
 								</button>
 							))}
-
 							<button
-								onClick={() => setCurrentPage((prev) => prev + 1)}
+								onClick={() => setCurrentPage((p) => p + 1)}
 								disabled={currentPage === totalPages}
 								className='px-4 py-2 border rounded-lg disabled:opacity-50'>
 								Next
