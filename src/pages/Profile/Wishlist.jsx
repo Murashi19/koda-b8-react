@@ -7,7 +7,7 @@ import Header from "../../components/Header";
 import ButtonMessage from "../../components/ButtonMessage";
 import ProductCard from "../../components/ProductCard";
 import Footer from "../../components/Footer";
-import ProfileSidebar from "../../components/ProfileSidebar";
+import ProfileSidebar from "../../components/Profile/ProfileSidebar";
 
 // Context
 import WishlistContext from "../../context/WishlistContext";
