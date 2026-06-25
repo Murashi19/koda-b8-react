@@ -14,7 +14,7 @@ import Logo from "../../assets/logo.svg";
 
 function Register() {
 	const navigate = useNavigate();
-	const [users, setUsers] = useLocalStorage("users");
+	const { saveData } = useLocalStorage("users");
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 	const {
@@ -31,7 +31,8 @@ function Register() {
 		const data = e;
 		const { name, email, password } = data;
 
-		const existingUser = users.some((user) => user.email === email);
+		const users = JSON.parse(localStorage.getItem("users") || "[]");
+		const existingUser = users.find((user) => user.email === email);
 
 		if (existingUser) {
 			alert("Email sudah terdaftar");
@@ -43,12 +44,20 @@ function Register() {
 			name,
 			email,
 			password,
-			role: "customer",
+			cart: [],
+			wishlist: [],
+			orders: [],
+			isLogin: false,
 		};
-		setUsers(newUser);
+		saveData(newUser);
 
 		reset();
-		navigate("/auth/login");
+		navigate("/auth/login", {
+			state: {
+				email: data.email,
+				password: data.password,
+			},
+		});
 	}
 
 	const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
@@ -63,7 +72,9 @@ function Register() {
 					backgroundImage: `linear-gradient(rgba(20,73,230,0.85),rgba(49,44,133,0.85)), url(${BgImage})`,
 				}}>
 				{/* Logo */}
-				<div className='flex items-center gap-2 text-white'>
+				<div
+					onClick={() => navigate("/")}
+					className='flex items-center gap-2 text-white cursor-pointer'>
 					<img
 						src={Logo}
 						alt='Logo BeliMudah'

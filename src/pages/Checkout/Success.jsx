@@ -65,7 +65,7 @@ const orderStatuses = [
 
 export default function CheckoutSuccess() {
 	const navigate = useNavigate();
-	const [orders] = useLocalStorage("orders");
+	const { data: orders } = useLocalStorage("orders");
 	console.log("DEBUG orders:", orders);
 
 	const order = orders[orders.length - 1];

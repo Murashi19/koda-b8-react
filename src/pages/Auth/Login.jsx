@@ -1,8 +1,7 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 
 // react-dom
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 
 // Hooks
 import { useForm } from "react-hook-form";
@@ -23,30 +22,55 @@ import Logo from "../../assets/logo.svg";
 
 function Login() {
 	const [showPassword, setShowPassword] = useState(false);
-	const [users] = useLocalStorage("users");
 	const { setAuth } = useContext(AuthContext);
+	const { updateData } = useLocalStorage("users");
+	const location = useLocation();
 	const navigate = useNavigate();
+
 	const {
 		register,
 		handleSubmit,
 		formState: { errors },
+		setValue,
 	} = useForm({
 		resolver: yupResolver(loginSchema),
 		mode: "all",
 	});
+	useEffect(() => {
+		if (location.state) {
+			setValue("email", location.state.email);
+			setValue("password", location.state.password);
+		}
+	}, [location.state, setValue]);
 
-	function processLogin(e) {
-		const data = e;
-		const existing = users.find((user) => user.email === data.email);
+	function processLogin(data) {
+		const users = JSON.parse(localStorage.getItem("users") || "[]");
+
+		// Cari user berdasarkan email & password
+		const existing = users.find((user) => user.email === data.email && user.password === data.password);
 
 		if (!existing) {
 			alert("Email atau password salah");
 			return;
 		}
 
-		setAuth(existing);
+		// Pastikan hanya satu user yang login
+		const updatedUsers = users.map((user) => ({
+			...user,
+			isLogin: user.id === existing.id,
+		}));
 
-		if (existing.role === "admin") {
+		// Simpan perubahan ke localStorage
+		updateData(updatedUsers);
+
+		// Ambil user yang sudah menjadi login
+		const loginUser = updatedUsers.find((user) => user.id === existing.id);
+
+		// Simpan ke AuthContext
+		setAuth(loginUser);
+
+		// Redirect
+		if (loginUser.role === "admin") {
 			navigate("/admin/dashboard");
 			return;
 		}
@@ -65,7 +89,9 @@ function Login() {
 					backgroundImage: `linear-gradient(rgba(20,73,230,0.85),rgba(49,44,133,0.85)), url(${BgImage})`,
 				}}>
 				{/* Logo */}
-				<div className='flex items-center gap-2 text-white'>
+				<div
+					onClick={() => navigate("/")}
+					className='flex items-center gap-2 text-white cursor-pointer'>
 					<img
 						src={Logo}
 						alt='Logo BeliMudah'

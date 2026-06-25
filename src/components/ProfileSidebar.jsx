@@ -9,11 +9,13 @@ import AuthContext from "../context/AuthContext.js";
 import useLocalStorage from "../hooks/useLocalStorage.js";
 
 function useProfileStats() {
-	const [order] = useLocalStorage("orders");
-	const [wishlist] = useLocalStorage("wishlist");
+	const { auth } = useContext(AuthContext);
+	const { wishlist } = useLocalStorage("wishlist");
 
-	const orderCount = order.length;
-	const wishlistCount = wishlist.length;
+	const currentUser = auth && auth.isLogin;
+
+	const orderCount = currentUser?.orders?.length ?? 0;
+	const wishlistCount = wishlist?.length ?? 0;
 
 	return { orderCount, wishlistCount };
 }
@@ -22,6 +24,7 @@ export default function ProfileSidebar({ activeNav }) {
 	const navigate = useNavigate();
 	const { orderCount, wishlistCount } = useProfileStats();
 	const { auth, setAuth } = useContext(AuthContext);
+	const { users, updateUserById } = useLocalStorage("users");
 
 	const character = auth?.name?.charAt(0).toUpperCase();
 
@@ -30,6 +33,8 @@ export default function ProfileSidebar({ activeNav }) {
 	};
 
 	const handleLogout = () => {
+		const updated = users.map((user) => (user.id === auth.id ? { ...user, isLogin: false } : user));
+		updateUserById(updated);
 		setAuth(null);
 		navigate("/auth/login");
 	};
