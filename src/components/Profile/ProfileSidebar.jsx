@@ -43,8 +43,16 @@ export default function ProfileSidebar({ activeNav }) {
 		<div className='col-span-1 flex flex-col gap-4'>
 			{/* Avatar card */}
 			<div className='flex flex-col items-center gap-3 bg-white border border-black/10 rounded-2xl p-5'>
-				<div className='w-16 h-16 rounded-full bg-blue-600/10 flex items-center justify-center'>
-					<span className='text-xl font-bold text-[#1a73e8]'>{character}</span>
+				<div className='w-16 h-16 rounded-full overflow-hidden bg-blue-600/10 flex items-center justify-center'>
+					{auth?.image ? (
+						<img
+							src={auth.image}
+							alt={auth.name}
+							className='w-full h-full object-cover'
+						/>
+					) : (
+						<span className='text-xl font-bold text-[#1a73e8]'>{character}</span>
+					)}
 				</div>
 				<div className='flex flex-col items-center gap-1'>
 					<h2 className='text-base font-semibold text-gray-900'>{auth?.name}</h2>

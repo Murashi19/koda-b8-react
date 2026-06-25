@@ -19,6 +19,7 @@ const labelClass = "text-sm font-medium text-gray-900";
 
 export default function EditProfile() {
 	const { auth, updateAuth } = useContext(AuthContext);
+	const [selectedImage, setSelectedImage] = useState(auth?.image || "");
 
 	const [notification, setNotification] = useState({
 		type: "",
@@ -61,11 +62,12 @@ export default function EditProfile() {
 	const handleSave = (data) => {
 		try {
 			updateAuth({
-				name: data.name?.trim() || auth.name,
-				email: data.email?.trim() || auth.email,
-				telepon: data.telepon?.trim() || "",
-				tanggalLahir: data.tanggalLahir || "",
-				jenisKelamin: data.jenisKelamin || "",
+				name: data.name,
+				email: data.email,
+				image: selectedImage,
+				telepon: data.telepon,
+				tanggalLahir: data.tanggalLahir,
+				jenisKelamin: data.jenisKelamin,
 			});
 
 			// alert("Profile berhasil diperbarui");
@@ -96,6 +98,19 @@ export default function EditProfile() {
 	}, [notification]);
 
 	const character = auth?.name?.charAt(0).toUpperCase();
+	const handleImageChange = (e) => {
+		const file = e.target.files?.[0];
+
+		if (!file) return;
+
+		const reader = new FileReader();
+
+		reader.onload = () => {
+			setSelectedImage(reader.result);
+		};
+
+		reader.readAsDataURL(file);
+	};
 
 	return (
 		<>
@@ -125,7 +140,17 @@ export default function EditProfile() {
 							className='w-full flex flex-col gap-4 bg-white border border-black/10 rounded-2xl p-6'>
 							{/* Avatar */}
 							<div className='flex items-center gap-4'>
-								<div className='w-20 h-20 rounded-full bg-blue-600/10 flex items-center justify-center text-2xl font-bold text-[#1a73e8] shrink-0'>{character}</div>
+								<div className='w-20 h-20 rounded-full overflow-hidden bg-blue-100'>
+									{selectedImage ? (
+										<img
+											src={selectedImage}
+											alt='Profile'
+											className='w-full h-full object-cover'
+										/>
+									) : (
+										<div className='w-full h-full flex items-center justify-center text-2xl font-bold text-[#1a73e8]'>{character}</div>
+									)}
+								</div>
 								<label
 									htmlFor='unggah-foto'
 									className='flex items-center gap-2 text-sm font-medium text-[#1a73e8] cursor-pointer hover:underline'>
@@ -140,7 +165,8 @@ export default function EditProfile() {
 									type='file'
 									accept='image/*'
 									className='hidden'
-									{...register("foto")}
+									onChange={handleImageChange}
+									{...register("image")}
 								/>
 							</div>
 
