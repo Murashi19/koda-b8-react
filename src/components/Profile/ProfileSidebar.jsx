@@ -10,7 +10,7 @@ import useLocalStorage from "../../hooks/useLocalStorage.js";
 
 function useProfileStats() {
 	const { auth } = useContext(AuthContext);
-	const { wishlist } = useLocalStorage("wishlist");
+	const { data: wishlist } = useLocalStorage("wishlist");
 
 	const currentUser = auth && auth.isLogin;
 
@@ -24,7 +24,7 @@ export default function ProfileSidebar({ activeNav }) {
 	const navigate = useNavigate();
 	const { orderCount, wishlistCount } = useProfileStats();
 	const { auth, setAuth } = useContext(AuthContext);
-	const { users, updateUserById } = useLocalStorage("users");
+	const { data: users, updateUserById } = useLocalStorage("users");
 
 	const character = auth?.name?.charAt(0).toUpperCase();
 
