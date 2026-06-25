@@ -172,16 +172,7 @@ export default function CheckoutSuccess() {
 
 					{/* Action Buttons */}
 					<div className='w-160 flex items-center gap-3'>
-						<button
-							type='button'
-							onClick={() => navigate("/profile/my-orders")}
-							className='h-12.5 rounded-xl px-6 bg-[#1a73e8] hover:bg-blue-600 text-white text-base font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer border-none'>
-							<Package
-								className='w-4 h-4'
-								strokeWidth={2}
-							/>
-							<span>Lacak Pesanan</span>
-						</button>
+						{/* Lihat riwayat pesanan */}
 						<button
 							type='button'
 							onClick={() => navigate("/profile/my-orders")}
