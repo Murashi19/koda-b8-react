@@ -1,15 +1,18 @@
-import { useState } from "react";
-import { Truck, ChevronRight } from "lucide-react";
+import { useEffect, useContext, useState } from "react";
+import { Truck, ChevronRight, Plus, MapPin, CheckCircle2 } from "lucide-react";
 import { useNavigate, useOutletContext } from "react-router-dom";
+import { useForm, useWatch } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 
-// Shipping Methods
+import { checkoutStep1Schema } from "../../services/validations/checkoutStep1Schema";
+import AuthContext from "../../context/AuthContext";
+
 const shippingOptions = [
 	{ id: "jne-reg", label: "JNE Reguler", sub: "3 - 5 hari kerja", price: "GRATIS" },
 	{ id: "jne-exp", label: "JNE Express", sub: "1 - 2 hari kerja", price: "GRATIS" },
 	{ id: "same-day", label: "Same Day Delivery", sub: "Hari ini (sebelum 16.00)", price: "GRATIS" },
 ];
 
-// Form Fields
 const inputClass = (hasError) => `w-full h-11 rounded-xl border ${hasError ? "border-red-400" : "border-black/10"} bg-gray-50 px-4 text-sm text-gray-900 outline-none focus:border-[#1a73e8] transition-colors placeholder:text-gray-400`;
 
 const textareaClass = "w-full rounded-xl border border-black/10 bg-gray-50 px-4 py-3 text-sm text-gray-900 outline-none focus:border-[#1a73e8] transition-colors placeholder:text-gray-400 resize-none h-20";
@@ -23,200 +26,294 @@ function Label({ children, required }) {
 	);
 }
 
-const REQUIRED_FIELDS = ["nama", "telepon", "email", "alamat", "kota", "provinsi", "kodePos"];
-
-// Main Page
 export default function CheckoutStep1() {
 	const navigate = useNavigate();
 	const { checkoutData, updateCheckoutData } = useOutletContext();
+	const { auth } = useContext(AuthContext);
 
-	const [form, setForm] = useState(checkoutData.shipping);
-	const [selectedShipping, setSelectedShipping] = useState(checkoutData.shippingMethod ?? "same-day");
-	const [errors, setErrors] = useState({});
+	const addresses = auth?.addresses ?? [];
+	const hasAddresses = addresses.length > 0;
 
-	const handleChange = (e) => {
-		const { name, value } = e.target;
-		setForm((prev) => ({ ...prev, [name]: value }));
-		// Hapus error field begitu user mulai mengetik ulang
-		if (errors[name]) {
-			setErrors((prev) => ({ ...prev, [name]: undefined }));
+	// Default ke alamat utama atau alamat pertama
+	const [selectedAddressId, setSelectedAddressId] = useState(() => {
+		const main = addresses.find((a) => a.isMain);
+		return main?.id ?? addresses[0]?.id ?? null;
+	});
+
+	// Tampilkan card jika ada alamat, form jika tidak
+	const [showForm, setShowForm] = useState(!hasAddresses);
+
+	const {
+		register,
+		handleSubmit,
+		reset,
+		control,
+		setValue,
+		formState: { errors },
+	} = useForm({
+		resolver: yupResolver(checkoutStep1Schema),
+		defaultValues: checkoutData.shipping ?? {},
+	});
+
+	const selectedShipping = useWatch({
+		control,
+		name: "shippingMethod",
+		defaultValue: checkoutData.shippingMethod ?? "same-day",
+	});
+
+	// Auto-fill data alamat utama
+	useEffect(() => {
+		if (auth) {
+			reset({
+				nama: checkoutData.shipping?.nama || auth.name || "",
+				telepon: checkoutData.shipping?.telepon || auth.telepon || "",
+				email: checkoutData.shipping?.email || auth.email || "",
+				alamat: checkoutData.shipping?.alamat || auth.addresses?.[0]?.alamat || "",
+				kota: checkoutData.shipping?.kota || auth.addresses?.[0]?.kota || "",
+				provinsi: checkoutData.shipping?.provinsi || auth.addresses?.[0]?.provinsi || "",
+				kodePos: checkoutData.shipping?.kodePos || auth.addresses?.[0]?.kodePos || "",
+				catatan: checkoutData.shipping?.catatan || "",
+				shippingMethod: checkoutData.shippingMethod ?? "same-day",
+			});
 		}
+	}, [auth, checkoutData.shipping, checkoutData.shippingMethod, reset]);
+
+	// Submit dari form manual
+	const onSubmit = (data) => {
+		const { shippingMethod, ...shipping } = data;
+		updateCheckoutData({ shipping, shippingMethod });
+		navigate("/checkout/step2");
 	};
 
-	const validate = () => {
-		const newErrors = {};
+	// Lanjut dari card alamat tersimpan
+	const handleContinueWithCard = () => {
+		const selected = addresses.find((a) => a.id === selectedAddressId);
+		if (!selected) return;
 
-		REQUIRED_FIELDS.forEach((field) => {
-			if (!form[field]?.trim()) {
-				newErrors[field] = "Wajib diisi";
-			}
+		updateCheckoutData({
+			shipping: {
+				nama: selected.name,
+				telepon: selected.phone,
+				email: auth.email,
+				alamat: selected.alamat,
+				kota: selected.kota,
+				provinsi: selected.provinsi,
+				kodePos: selected.kodePos,
+				catatan: "",
+			},
+			shippingMethod: selectedShipping,
 		});
-
-		if (form.email?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-			newErrors.email = "Format email tidak valid";
-		}
-
-		if (form.telepon?.trim() && !/^[0-9+\-\s]{8,15}$/.test(form.telepon)) {
-			newErrors.telepon = "Format nomor telepon tidak valid";
-		}
-
-		setErrors(newErrors);
-		return Object.keys(newErrors).length === 0;
-	};
-
-	const handleContinue = () => {
-		if (!validate()) return;
-
-		updateCheckoutData({ shipping: form, shippingMethod: selectedShipping });
 		navigate("/checkout/step2");
 	};
 
 	return (
-		<>
-			{/* Left: Delivery Form */}
-			<div className='flex-1 flex flex-col gap-6 bg-white border border-black/10 rounded-2xl p-6'>
-				{/* Heading */}
-				<div className='flex items-center gap-2'>
-					<Truck
-						className='w-5 h-5 text-[#1a73e8]'
-						strokeWidth={2}
-					/>
-					<span className='text-base font-medium text-gray-900'>Alamat Pengiriman</span>
-				</div>
+		<div className='flex-1 flex flex-col gap-6 bg-white border border-black/10 rounded-2xl p-6'>
+			{/* Heading */}
+			<div className='flex items-center gap-2'>
+				<Truck
+					className='w-5 h-5 text-[#1a73e8]'
+					strokeWidth={2}
+				/>
+				<span className='text-base font-medium text-gray-900'>Alamat Pengiriman</span>
+			</div>
 
-				{/* Form */}
-				<div className='grid grid-cols-2 gap-4'>
-					<div>
-						<Label required>Nama Penerima</Label>
-						<input
-							type='text'
-							name='nama'
-							placeholder='Budi Santoso'
-							value={form.nama}
-							onChange={handleChange}
-							className={inputClass(errors.nama)}
-						/>
-						{errors.nama && <p className='text-xs text-red-500 mt-1'>{errors.nama}</p>}
-					</div>
-
-					<div>
-						<Label required>Nomor Telepon</Label>
-						<input
-							type='tel'
-							name='telepon'
-							placeholder='0812-3456-7890'
-							value={form.telepon}
-							onChange={handleChange}
-							className={inputClass(errors.telepon)}
-						/>
-						{errors.telepon && <p className='text-xs text-red-500 mt-1'>{errors.telepon}</p>}
-					</div>
-
-					<div className='col-span-2'>
-						<Label required>Email</Label>
-						<input
-							type='email'
-							name='email'
-							placeholder='budi@email.com'
-							value={form.email}
-							onChange={handleChange}
-							className={inputClass(errors.email)}
-						/>
-						{errors.email && <p className='text-xs text-red-500 mt-1'>{errors.email}</p>}
-					</div>
-
-					<div className='col-span-2'>
-						<Label required>Alamat Lengkap</Label>
-						<input
-							type='text'
-							name='alamat'
-							placeholder='Jl. Kebon Jeruk No. 15'
-							value={form.alamat}
-							onChange={handleChange}
-							className={inputClass(errors.alamat)}
-						/>
-						{errors.alamat && <p className='text-xs text-red-500 mt-1'>{errors.alamat}</p>}
-					</div>
-
-					<div>
-						<Label required>Kota</Label>
-						<input
-							type='text'
-							name='kota'
-							placeholder='Jakarta Barat'
-							value={form.kota}
-							onChange={handleChange}
-							className={inputClass(errors.kota)}
-						/>
-						{errors.kota && <p className='text-xs text-red-500 mt-1'>{errors.kota}</p>}
-					</div>
-
-					<div>
-						<Label required>Provinsi</Label>
-						<input
-							type='text'
-							name='provinsi'
-							placeholder='DKI Jakarta'
-							value={form.provinsi}
-							onChange={handleChange}
-							className={inputClass(errors.provinsi)}
-						/>
-						{errors.provinsi && <p className='text-xs text-red-500 mt-1'>{errors.provinsi}</p>}
-					</div>
-
-					<div>
-						<Label required>Kode Pos</Label>
-						<input
-							type='text'
-							name='kodePos'
-							placeholder='11530'
-							value={form.kodePos}
-							onChange={handleChange}
-							className={inputClass(errors.kodePos)}
-						/>
-						{errors.kodePos && <p className='text-xs text-red-500 mt-1'>{errors.kodePos}</p>}
-					</div>
-
-					<div>
-						<Label>Catatan (opsional)</Label>
-						<textarea
-							name='catatan'
-							placeholder='Warna pagar, dll.'
-							value={form.catatan}
-							onChange={handleChange}
-							className={textareaClass}
-						/>
-					</div>
-				</div>
-
-				{/* Shipping Methods */}
+			{/* ── Card pilihan alamat tersimpan ── */}
+			{hasAddresses && !showForm ? (
 				<div className='flex flex-col gap-3'>
-					<h3 className='text-base font-medium text-gray-900'>Metode Pengiriman</h3>
-					{shippingOptions.map((opt) => (
-						<label
-							key={opt.id}
-							className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${selectedShipping === opt.id ? "border-[#1a73e8] bg-blue-50" : "border-black/10 hover:border-gray-300"}`}>
-							<input
-								type='radio'
-								name='shipping'
-								value={opt.id}
-								checked={selectedShipping === opt.id}
-								onChange={() => setSelectedShipping(opt.id)}
-								className='accent-[#1a73e8]'
-							/>
-							<div className='flex flex-col flex-1'>
-								<span className='text-sm font-medium text-gray-900'>{opt.label}</span>
-								<span className='text-xs text-gray-500'>{opt.sub}</span>
+					{addresses.map((addr) => (
+						<button
+							key={addr.id}
+							type='button'
+							onClick={() => setSelectedAddressId(addr.id)}
+							className={`w-full text-left flex items-start gap-3 p-4 rounded-xl border-2 transition-colors ${selectedAddressId === addr.id ? "border-[#1a73e8] bg-blue-50/40" : "border-black/10 hover:border-gray-300 bg-white"}`}>
+							{/* Checkmark */}
+							<div className='mt-0.5 shrink-0'>
+								{selectedAddressId === addr.id ? (
+									<CheckCircle2
+										className='w-5 h-5 text-[#1a73e8]'
+										strokeWidth={2}
+									/>
+								) : (
+									<div className='w-5 h-5 rounded-full border-2 border-gray-300' />
+								)}
 							</div>
-							<span className='text-sm font-medium text-green-600'>{opt.price}</span>
-						</label>
-					))}
-				</div>
 
-				{/* Continue Button */}
+							{/* Detail */}
+							<div className='flex flex-col gap-0.5 flex-1'>
+								<div className='flex items-center gap-2'>
+									<span className='text-sm font-medium text-gray-900'>{addr.name}</span>
+									{addr.isMain && <span className='h-5 px-2 rounded-full text-[10px] font-medium text-white bg-[#1a73e8] flex items-center'>Utama</span>}
+								</div>
+								<span className='text-xs text-gray-500'>{addr.phone}</span>
+								<span className='text-sm text-gray-600 mt-1'>
+									{addr.alamat}, {addr.kota}, {addr.provinsi} {addr.kodePos}
+								</span>
+							</div>
+						</button>
+					))}
+
+					{/* Gunakan alamat lain */}
+					<button
+						type='button'
+						onClick={() => setShowForm(true)}
+						className='flex items-center gap-2 text-sm text-[#1a73e8] hover:underline w-fit mt-1'>
+						<Plus
+							className='w-4 h-4'
+							strokeWidth={2}
+						/>
+						Gunakan alamat lain
+					</button>
+				</div>
+			) : (
+				/* ── Form manual ── */
+				<>
+					{/* Kembali ke card jika ada alamat tersimpan */}
+					{hasAddresses && (
+						<button
+							type='button'
+							onClick={() => setShowForm(false)}
+							className='flex items-center gap-2 text-sm text-[#1a73e8] hover:underline w-fit -mt-3'>
+							<MapPin
+								className='w-4 h-4'
+								strokeWidth={2}
+							/>
+							Pilih dari alamat tersimpan
+						</button>
+					)}
+
+					<form
+						id='checkout-step1'
+						onSubmit={handleSubmit(onSubmit)}
+						className='grid grid-cols-2 gap-4'>
+						<div>
+							<Label required>Nama Penerima</Label>
+							<input
+								type='text'
+								placeholder='Budi Santoso'
+								className={inputClass(errors.nama)}
+								{...register("nama")}
+							/>
+							{errors.nama && <p className='text-xs text-red-500 mt-1'>{errors.nama.message}</p>}
+						</div>
+
+						<div>
+							<Label required>Nomor Telepon</Label>
+							<input
+								type='tel'
+								placeholder='0812-3456-7890'
+								className={inputClass(errors.telepon)}
+								{...register("telepon")}
+							/>
+							{errors.telepon && <p className='text-xs text-red-500 mt-1'>{errors.telepon.message}</p>}
+						</div>
+
+						<div className='col-span-2'>
+							<Label required>Email</Label>
+							<input
+								type='email'
+								placeholder='budi@email.com'
+								className={inputClass(errors.email)}
+								{...register("email")}
+							/>
+							{errors.email && <p className='text-xs text-red-500 mt-1'>{errors.email.message}</p>}
+						</div>
+
+						<div className='col-span-2'>
+							<Label required>Alamat Lengkap</Label>
+							<input
+								type='text'
+								placeholder='Jl. Kebon Jeruk No. 15'
+								className={inputClass(errors.alamat)}
+								{...register("alamat")}
+							/>
+							{errors.alamat && <p className='text-xs text-red-500 mt-1'>{errors.alamat.message}</p>}
+						</div>
+
+						<div>
+							<Label required>Kota</Label>
+							<input
+								type='text'
+								placeholder='Jakarta Barat'
+								className={inputClass(errors.kota)}
+								{...register("kota")}
+							/>
+							{errors.kota && <p className='text-xs text-red-500 mt-1'>{errors.kota.message}</p>}
+						</div>
+
+						<div>
+							<Label required>Provinsi</Label>
+							<input
+								type='text'
+								placeholder='DKI Jakarta'
+								className={inputClass(errors.provinsi)}
+								{...register("provinsi")}
+							/>
+							{errors.provinsi && <p className='text-xs text-red-500 mt-1'>{errors.provinsi.message}</p>}
+						</div>
+
+						<div>
+							<Label required>Kode Pos</Label>
+							<input
+								type='text'
+								placeholder='11530'
+								className={inputClass(errors.kodePos)}
+								{...register("kodePos")}
+							/>
+							{errors.kodePos && <p className='text-xs text-red-500 mt-1'>{errors.kodePos.message}</p>}
+						</div>
+
+						<div>
+							<Label>Catatan (opsional)</Label>
+							<textarea
+								placeholder='Warna pagar, dll.'
+								className={textareaClass}
+								{...register("catatan")}
+							/>
+						</div>
+					</form>
+				</>
+			)}
+
+			{/* Shipping Methods */}
+			<div className='flex flex-col gap-3'>
+				<h3 className='text-base font-medium text-gray-900'>Metode Pengiriman</h3>
+				{shippingOptions.map((opt) => (
+					<label
+						key={opt.id}
+						className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${selectedShipping === opt.id ? "border-[#1a73e8] bg-blue-50" : "border-black/10 hover:border-gray-300"}`}>
+						<input
+							type='radio'
+							value={opt.id}
+							checked={selectedShipping === opt.id}
+							onChange={() => setValue("shippingMethod", opt.id)}
+							className='accent-[#1a73e8]'
+						/>
+						<div className='flex flex-col flex-1'>
+							<span className='text-sm font-medium text-gray-900'>{opt.label}</span>
+							<span className='text-xs text-gray-500'>{opt.sub}</span>
+						</div>
+						<span className='text-sm font-medium text-green-600'>{opt.price}</span>
+					</label>
+				))}
+			</div>
+
+			{/* Continue Button */}
+			{hasAddresses && !showForm ? (
 				<button
 					type='button'
-					onClick={handleContinue}
+					onClick={handleContinueWithCard}
+					disabled={!selectedAddressId}
+					className='w-full h-12 rounded-xl bg-[#1a73e8] hover:bg-blue-600 disabled:opacity-50 text-white text-base font-medium flex items-center justify-center gap-2 transition-colors'>
+					<span>Lanjut Ke Pembayaran</span>
+					<ChevronRight
+						className='w-5 h-5'
+						strokeWidth={2}
+					/>
+				</button>
+			) : (
+				<button
+					type='submit'
+					form='checkout-step1'
 					className='w-full h-12 rounded-xl bg-[#1a73e8] hover:bg-blue-600 text-white text-base font-medium flex items-center justify-center gap-2 transition-colors'>
 					<span>Lanjut Ke Pembayaran</span>
 					<ChevronRight
@@ -224,7 +321,7 @@ export default function CheckoutStep1() {
 						strokeWidth={2}
 					/>
 				</button>
-			</div>
-		</>
+			)}
+		</div>
 	);
 }
