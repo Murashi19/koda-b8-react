@@ -1,12 +1,7 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function usePagination(data, perPage = 16) {
     const [currentPage, setCurrentPage] = useState(1);
-
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [data]);
 
     const totalPages = Math.ceil(data.length / perPage);
 
