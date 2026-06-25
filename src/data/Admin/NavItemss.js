@@ -9,5 +9,5 @@ export const navItems = [
     { id: "products", icon: BsBoxSeam, label: "Produk", route: "/admin/produk-list" },
     { id: "orders", icon: FiShoppingCart, label: "Pesanan", route: "/admin/order-list" },
     { id: "customers", icon: HiUsers, label: "Pelanggan", route: "/admin/customers" },
-    { id: "settings", icon: MdSettings, label: "Pengaturan", route: "/admin/#" },
+    { id: "settings", icon: MdSettings, label: "Pengaturan", route: "/admin/settings" },
 ];
