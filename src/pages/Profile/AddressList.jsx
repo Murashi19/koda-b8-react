@@ -1,41 +1,56 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { MapPin, Plus, Pencil, Trash2 } from "lucide-react";
 
 // Components
 import Header from "../../components/Header";
 import ButtonMessage from "../../components/ButtonMessage";
 import Footer from "../../components/Footer";
-import ProfileSidebar from "../../components/ProfileSidebar";
-import AddressModal from "../../components/AddressModal";
+import ProfileSidebar from "../../components/Profile/ProfileSidebar";
+import AddressModal from "../../components/Profile/AddressModal";
 
-// Hooks
-import useLocalStorage from "../../hooks/useLocalStorage";
+// Context
+import AuthContext from "../../context/AuthContext";
 
 // Main Page
 export default function AddressList() {
-	const [addresses, saveAddress, updateAddresses] = useLocalStorage("addresses");
-	const [modalMode, setModalMode] = useState(null); // null | "add" | { mode: "edit", data }
+	const { auth, updateAuth } = useContext(AuthContext);
+	const addresses = auth?.addresses ?? [];
+	const [modalMode, setModalMode] = useState(null);
 
 	const handleSetMain = (id) => {
-		updateAddresses(addresses.map((a) => ({ ...a, isMain: a.id === id })));
+		updateAuth({
+			addresses: addresses.map((address) => ({
+				...address,
+				isMain: address.id === id,
+			})),
+		});
 	};
 
 	const handleDelete = (id) => {
-		updateAddresses(addresses.filter((a) => a.id !== id));
+		updateAuth({
+			addresses: addresses.filter((address) => address.id !== id),
+		});
 	};
 
 	const handleAdd = (formData) => {
 		const newAddress = {
 			...formData,
 			id: Date.now(),
-			isMain: addresses.length === 0, // alamat pertama otomatis jadi utama
+			isMain: addresses.length === 0,
 		};
-		saveAddress(newAddress);
+
+		updateAuth({
+			addresses: [...addresses, newAddress],
+		});
+
 		setModalMode(null);
 	};
 
-	const handleEdit = (formData) => {
-		updateAddresses(addresses.map((a) => (a.id === modalMode.data.id ? { ...a, ...formData } : a)));
+	const handleEdit = (updatedAddress) => {
+		updateAuth({
+			addresses: addresses.map((address) => (address.id === updatedAddress.id ? updatedAddress : address)),
+		});
+
 		setModalMode(null);
 	};
 
@@ -83,7 +98,7 @@ export default function AddressList() {
 										{/* Label row */}
 										<div className='flex items-center justify-between'>
 											<div className='flex items-center gap-3'>
-												<h3 className='text-base font-medium text-gray-900'>{addr.label}</h3>
+												<h3 className='text-base font-medium text-gray-900'>{addr.alamat}</h3>
 												{addr.isMain && <span className='flex items-center justify-center h-6 px-3 rounded-full text-xs font-normal text-white bg-[#1a73e8]'>Utama</span>}
 											</div>
 											{/* Action buttons */}
@@ -122,7 +137,7 @@ export default function AddressList() {
 												{addr.name} · {addr.phone}
 											</p>
 											<p className='text-sm text-gray-500'>
-												{addr.address}, {addr.kota}, {addr.provinsi} {addr.kodePos}
+												{addr.alamat}, {addr.kota}, {addr.provinsi} {addr.kodePos}
 											</p>
 										</div>
 									</div>
