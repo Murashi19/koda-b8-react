@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/incompatible-library */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -8,7 +7,7 @@ import * as yup from "yup";
 // react-icons
 
 import { BsStarFill } from "react-icons/bs";
-import { FiSearch, FiEye, FiEdit2, FiTrash2 } from "react-icons/fi";
+import { FiEye, FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
 import { RiFilter3Line } from "react-icons/ri";
 
 // Components
@@ -17,8 +16,11 @@ import Sidebar from "../../components/Admin/Sidebar";
 import AddProductModal from "../../components/Admin/AddProduct";
 
 // Product Data
-import { products, summaryCards } from "../../data/products";
-const productsData = [...products];
+import { summaryCards } from "../../data/products";
+import { useDispatch, useSelector } from "react-redux";
+import { addProduct, deleteProduct } from "../../redux/reducers/products";
+
+import { toggleSidebar } from "../../redux/reducers/dashboard";
 
 // Yup Schema
 const searchSchema = yup.object({
@@ -67,20 +69,39 @@ function DeleteModal({ product, onConfirm, onCancel }) {
 export default function ProductList() {
 	const navigate = useNavigate();
 	// const [activeNav, setActiveNav] = useState("products");
-	const [sidebarOpen, setSidebarOpen] = useState(true);
-	const [products, setProducts] = useState(productsData);
+	const { sidebarOpen } = useSelector((state) => state.dashboard);
+	const products = useSelector((state) => state.products.items);
+	const dispatch = useDispatch();
 	const [categoryFilter, setCategoryFilter] = useState("Semua Kategori");
 	const [deleteTarget, setDeleteTarget] = useState(null);
 
 	const [showModal, setShowModal] = useState(false);
 	const handleAddProduct = (data) => {
-		console.log("Data produk:", data);
-		// TODO: POST ke API
+		dispatch(
+			addProduct({
+				id: products.length + 1,
+				name: data.nama,
+				brand: data.merek,
+				category: data.kategori,
+				image: URL.createObjectURL(data.gambar[0]),
+				description: data.deskripsi,
+				discountPrice: Number(data.harga),
+				regularPrice: data.hargaAsli ? Number(data.hargaAsli) : null,
+				stock: Number(data.stok),
+				rating: 0,
+				review: 0,
+				badges: [...(data.baru ? ["new"] : []), ...(data.unggulan ? ["featured"] : [])],
+				wishlist: false,
+				createdAt: Date.now(),
+			}),
+		);
+
+		setShowModal(false);
 	};
 
 	const {
-		register,
 		watch,
+		register,
 		formState: { errors },
 	} = useForm({
 		resolver: yupResolver(searchSchema),
@@ -92,13 +113,13 @@ export default function ProductList() {
 
 	// Filter logic
 	const filtered = products.filter((p) => {
-		const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.brand.toLowerCase().includes(searchQuery.toLowerCase());
+		const matchSearch = p.name?.toLowerCase().includes(searchQuery?.toLowerCase()) || p.brand?.toLowerCase().includes(searchQuery?.toLowerCase());
 		const matchCategory = categoryFilter === "Semua Kategori" || p.category === categoryFilter;
 		return matchSearch && matchCategory;
 	});
 
 	const handleDelete = (id) => {
-		setProducts((prev) => prev.filter((p) => p.id !== id));
+		dispatch(deleteProduct(id));
 		setDeleteTarget(null);
 	};
 
@@ -109,7 +130,7 @@ export default function ProductList() {
 			<div className='flex flex-col flex-1 min-w-0'>
 				{/* Header */}
 				<Header
-					onToggleSidebar={() => setSidebarOpen((v) => !v)}
+					onToggleSidebar={() => dispatch(toggleSidebar())}
 					onSearch={(query) => console.log("search:", query)}
 				/>
 
@@ -140,7 +161,6 @@ export default function ProductList() {
 							</div>
 							{errors.query && <p className='text-xs text-red-500 ml-1'>{errors.query.message}</p>}
 						</div>
-
 						{/* Category Filter */}
 						<select
 							value={categoryFilter}
@@ -223,8 +243,20 @@ export default function ProductList() {
 
 												{/* Price */}
 												<td className='px-4 py-4'>
-													<span className='block font-semibold text-blue-600'>{p.discountPrice}</span>
-													{p.regularPrice && <span className='text-xs text-gray-400 line-through'>{p.regularPrice}</span>}
+													<span className='block font-semibold text-blue-600'>
+														{new Intl.NumberFormat("id-ID", {
+															style: "currency",
+															currency: "IDR",
+														}).format(p.discountPrice)}
+													</span>
+													{p.regularPrice && (
+														<span className='text-xs text-gray-400 line-through'>
+															{new Intl.NumberFormat("id-ID", {
+																style: "currency",
+																currency: "IDR",
+															}).format(p.regularPrice)}
+														</span>
+													)}
 												</td>
 
 												{/* Stock */}
@@ -244,8 +276,8 @@ export default function ProductList() {
 														{p.badges?.map((b) => (
 															<span
 																key={b}
-																className={`inline-flex px-2 py-1 text-xs rounded-full font-medium ${badgeConfig[b].bg} ${badgeConfig[b].text}`}>
-																{badgeConfig[b].label}
+																className={`inline-flex px-2 py-1 text-xs rounded-full font-medium ${badgeConfig[b]?.bg} ${badgeConfig[b]?.text}`}>
+																{badgeConfig[b]?.label}
 															</span>
 														))}
 													</div>
