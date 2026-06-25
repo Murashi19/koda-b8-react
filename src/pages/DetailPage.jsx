@@ -16,6 +16,7 @@ import WishlistContext from "../context/WishlistContext";
 // Data
 import { products } from "../data/products.js";
 import category from "../data/category.js";
+import { animateScroll } from "react-scroll";
 
 // Data Delivery
 const deliveryInfo = [
@@ -43,9 +44,9 @@ export default function DetailPage() {
 	const [selectedImg, setSelectedImg] = useState(product?.image);
 
 	useEffect(() => {
-		window.scrollTo({
-			top: 0,
-			behavior: "smooth",
+		animateScroll.scrollToTop({
+			duration: 700,
+			smooth: "easeInOutQuart",
 		});
 	}, [id]);
 
