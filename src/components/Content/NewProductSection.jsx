@@ -19,7 +19,7 @@ export default function NewProduct() {
 					<h2 className='text-xl font-medium text-gray-900 leading-7.5'>Produk Terbaru</h2>
 				</div>
 				<Link
-					to='#'
+					to='/browse-product'
 					className='flex items-center gap-1 text-sm text-[#1a73e8] hover:underline'>
 					Lihat Semua
 					<ArrowRight className='w-3.5 h-3.5' />

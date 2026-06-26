@@ -15,7 +15,7 @@ export default function BestProduct() {
 				<div className='flex items-center justify-between'>
 					<h2 className='text-xl font-medium text-gray-900 leading-7.5'>Produk Unggulan</h2>
 					<Link
-						to='#'
+						to='/browse-product'
 						className='flex items-center gap-1 text-sm text-[#1a73e8] hover:underline'>
 						Lihat Semua
 						<ArrowRight className='w-3.5 h-3.5' />
