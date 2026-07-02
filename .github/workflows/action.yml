@@ -1,0 +1,29 @@
+name: Weekly Project
+run-name: Running Project Weekly
+on:
+    push: 
+        branches:
+            - main
+        tags:
+            - v*
+jobs:
+    react-project-image:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check out repository code
+              uses: actions/checkout@v6
+            # - name: Setup nodejs version
+            #   uses: actions/setup-node@v6
+            #   with:
+            #     node-version: '26.4.0'
+            # - name: Installing node dependencies
+            #   run: npm install
+            - name: Login to docker
+              run: echo -n ${{secrets.GITHUB_TOKEN}}| docker login ghcr.io --username ${{github.actor}} --password-stdin
+            - name: Build images
+              run: docker build . -t ghcr.io/${{github.repository}}:latest
+            - name: Push to ghcr.io
+              run: docker push ghcr.io/${{github.repository}}:latest
+
+
+
